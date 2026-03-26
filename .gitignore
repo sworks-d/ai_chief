@@ -1,0 +1,20 @@
+# APIキー・環境変数
+.env
+.env.local
+.env.*
+
+# Node.js
+node_modules/
+npm-debug.log*
+
+# データ蓄積ファイル（個人データ）
+data/posts/
+data/metrics/
+data/personas/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ログ
+*.log
