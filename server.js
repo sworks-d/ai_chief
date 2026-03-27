@@ -313,6 +313,33 @@ app.post('/api/post-now/:id', async (req, res) => {
 });
 
 /**
+ * GET /api/posts/published
+ * 投稿済み一覧（data/posts/ 以下の全JSONを収集・最新順）
+ */
+app.get('/api/posts/published', (req, res) => {
+  const postsDir = path.join(DATA_DIR, 'posts');
+  if (!fs.existsSync(postsDir)) return res.json([]);
+
+  const posts = [];
+  try {
+    const dateDirs = fs.readdirSync(postsDir)
+      .filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d));
+
+    for (const dateDir of dateDirs) {
+      const dirPath = path.join(postsDir, dateDir);
+      const files = fs.readdirSync(dirPath).filter(f => f.endsWith('.json'));
+      for (const file of files) {
+        const post = readJSON(path.join(dirPath, file), null);
+        if (post && post.posted_at) posts.push(post);
+      }
+    }
+  } catch {}
+
+  posts.sort((a, b) => new Date(b.posted_at) - new Date(a.posted_at));
+  res.json(posts.slice(0, 30));
+});
+
+/**
  * GET /api/status
  * システム状態確認
  */
