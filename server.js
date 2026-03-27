@@ -53,9 +53,10 @@ app.get('/api/research', (req, res) => {
   const items = readJSON(checkedFile);
 
   const featured = items.filter(i => i.is_featured).slice(0, 3);
+  const caution = items.filter(i => i.info_type === 'TYPE_C');
   const all = items.filter(i => i.info_type !== 'NG');
 
-  res.json({ featured, all, total: items.length });
+  res.json({ featured, caution, all, total: items.length, date: today });
 });
 
 // ============================
@@ -399,7 +400,7 @@ app.get('/', (req, res) => {
 // サーバー起動
 app.listen(PORT, () => {
   console.log('=================================');
-  console.log('S — BRIEF が起動しました');
+  console.log('余白のAI が起動しました');
   console.log(`ローカル：http://localhost:${PORT}`);
   console.log('外部アクセス → 別ターミナルで: npm run tunnel');
   console.log('=================================');

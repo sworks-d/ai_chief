@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>S — BRIEF</title>
+<title>余白のAI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -883,7 +883,7 @@ header {
 <body>
 
 <header>
-  <div class="h-logo">S — BRIEF</div>
+  <div class="h-logo">余白のAI</div>
   <div class="h-sub">DAILY INPUT<br>APPROVE · ANALYZE</div>
   <div class="h-right">
     <span class="h-date" id="h-date">03.27 · 07:02</span>
@@ -900,7 +900,16 @@ header {
       <span class="panel-title">INPUT</span>
       <span class="panel-label">今日のインプット</span>
     </div>
-    <div class="panel-body" id="intel-body"></div>
+    <div class="q-tabs">
+      <div class="q-tab active" id="itab-today" onclick="switchIntelTab('today')">今日</div>
+      <div class="q-tab" id="itab-bookmarks" onclick="switchIntelTab('bookmarks')">🔖 保存済み</div>
+    </div>
+    <div class="q-panel active" id="ipanel-today">
+      <div class="panel-body" id="intel-body"></div>
+    </div>
+    <div class="q-panel" id="ipanel-bookmarks">
+      <div class="panel-body" id="bookmark-body"></div>
+    </div>
   </div>
 
   <!-- QUEUE -->
@@ -1081,8 +1090,60 @@ function useIntel(btn) {
   btn.disabled = true;
 }
 
+// ---- ブックマーク ----
+const _BM_KEY = 'yohaku_bookmarks';
+function getBookmarks() {
+  try { return JSON.parse(localStorage.getItem(_BM_KEY) || '[]'); } catch { return []; }
+}
+function saveBookmarks(bms) {
+  localStorage.setItem(_BM_KEY, JSON.stringify(bms));
+}
+function toggleBookmark(btn, iid) {
+  const item = window._intelItems && window._intelItems[iid];
+  if (!item) return;
+  let bms = getBookmarks();
+  const idx = bms.findIndex(b => b.title === item.title);
+  if (idx === -1) {
+    bms.push(item);
+    btn.textContent = '🔖 保存済み';
+    btn.style.color = 'var(--amber)';
+  } else {
+    bms.splice(idx, 1);
+    btn.textContent = '🔖 保存';
+    btn.style.color = '';
+  }
+  saveBookmarks(bms);
+  const bmPanel = document.getElementById('ipanel-bookmarks');
+  if (bmPanel && bmPanel.classList.contains('active')) renderBookmarks();
+}
+function renderBookmarks() {
+  const body = document.getElementById('bookmark-body');
+  if (!body) return;
+  const bms = getBookmarks();
+  if (bms.length === 0) {
+    body.innerHTML = '<div style="color:var(--white3);font-size:12px;padding:32px;text-align:center;">保存済みの記事はありません</div>';
+    return;
+  }
+  body.innerHTML = bms.map(item => buildIntelCard(item)).join('');
+}
+function switchIntelTab(tab) {
+  ['today','bookmarks'].forEach(t => {
+    document.getElementById('itab-' + t).classList.toggle('active', t === tab);
+    document.getElementById('ipanel-' + t).classList.toggle('active', t === tab);
+  });
+  if (tab === 'bookmarks') renderBookmarks();
+}
+
+// ---- Intel item storage ----
+let _iidCtr = 0;
+window._intelItems = {};
+
 // ---- Intel カード HTML 生成 ----
 function buildIntelCard(item) {
+  const iid = 'iid' + (_iidCtr++);
+  window._intelItems[iid] = item;
+  const bms = getBookmarks();
+  const isBookmarked = bms.some(b => b.title === item.title);
   const barClass = item.info_type === 'TYPE_C' ? 'i-bar-a'
     : (item.info_type === 'TYPE_A' || item.freshness === 'A') ? 'i-bar-w'
     : 'i-bar-b';
@@ -1095,6 +1156,8 @@ function buildIntelCard(item) {
   const noteClass = item.info_type === 'TYPE_C' ? 'i-note i-note-a'
     : item.layer === 'MACRO' ? 'i-note i-note-b' : 'i-note';
   const btnLabel = item.info_type === 'TYPE_C' ? '+ 両論で使う' : '+ 投稿に使う';
+  const bmStyle = isBookmarked ? ' style="color:var(--amber)"' : '';
+  const bmLabel = isBookmarked ? '🔖 保存済み' : '🔖 保存';
   return '<div class="intel">'
     + '<div class="i-bar ' + barClass + '"></div>'
     + '<div class="i-inner">'
@@ -1106,10 +1169,25 @@ function buildIntelCard(item) {
     + '<div class="' + noteClass + '">→ ' + escHtml(item.post_hint || '') + '</div>'
     + '<div class="i-actions">'
     + '<button class="btn btn-use" onclick="useIntel(this)">' + btnLabel + '</button>'
+    + '<button class="btn" onclick="toggleBookmark(this,\'' + escAttr(iid) + '\')"' + bmStyle + '>' + bmLabel + '</button>'
     + '<button class="btn">skip</button>'
     + '</div>'
     + '</div>'
     + '</div>';
+}
+
+// ---- Intel セクション展開 ----
+function toggleIntelSection(sectionId) {
+  const div = document.getElementById('intel-' + sectionId);
+  const btn = document.getElementById('intel-' + sectionId + '-btn');
+  if (!div || !btn) return;
+  const isOpen = div.style.display !== 'none';
+  div.style.display = isOpen ? 'none' : 'block';
+  const lbl = btn.querySelector('.layer-label');
+  if (lbl && sectionId === 'caution') {
+    const count = div.querySelectorAll('.intel').length;
+    lbl.innerHTML = isOpen ? '⚠ 注意 (' + count + '件) ▼' : '⚠ 注意 (' + count + '件) ▲';
+  }
 }
 
 // ---- Intel 展開トグル ----
@@ -1127,22 +1205,46 @@ function toggleIntelAll() {
 
 // ---- Intel パネル描画 ----
 function renderIntel(data) {
+  _iidCtr = 0;
+  window._intelItems = {};
   const body = document.getElementById('intel-body');
   const featured = data.featured || [];
+  const caution = data.caution || [];
   const all = data.all || [];
+
+  // 今日タブの日付ラベル更新
+  if (data.date) {
+    const parts = data.date.split('-');
+    const tabEl = document.getElementById('itab-today');
+    if (tabEl) tabEl.textContent = '今日 ' + parts[1] + '.' + parts[2];
+  }
 
   if (featured.length === 0 && all.length === 0) {
     body.innerHTML = '<div style="color:var(--white3);font-size:12px;padding:32px;text-align:center;">今日のインプットはまだありません</div>';
     return;
   }
 
+  let html = '';
+
   // 注目（featured）カード
-  let html = featured.map(item => buildIntelCard(item)).join('');
+  html += featured.map(item => buildIntelCard(item)).join('');
 
-  // 残り（featured以外の全件）
+  // 注意（caution）セクション - featuredに含まれないもの
   const featTitles = new Set(featured.map(f => f.title));
-  const rest = all.filter(i => !featTitles.has(i.title));
+  const cautionRest = caution.filter(c => !featTitles.has(c.title));
+  if (cautionRest.length > 0) {
+    html += '<div class="p-layer-toggle" id="intel-caution-btn" onclick="toggleIntelSection(\'caution\')" style="margin:4px 0 0">'
+      + '<span class="layer-label" style="color:var(--amber)">⚠ 注意 (' + cautionRest.length + '件) ▼</span>'
+      + '<span class="chevron"></span>'
+      + '</div>'
+      + '<div id="intel-caution" style="display:none">'
+      + cautionRest.map(item => buildIntelCard(item)).join('')
+      + '</div>';
+  }
 
+  // 残り全件（featured + cautionを除く）
+  const shownTitles = new Set([...featured.map(f => f.title), ...caution.map(c => c.title)]);
+  const rest = all.filter(i => !shownTitles.has(i.title));
   if (rest.length > 0) {
     html += '<div class="p-layer-toggle" id="intel-more-btn" onclick="toggleIntelAll()" style="margin:4px 0 0">'
       + '<span class="layer-label">すべて見る ▼ (' + rest.length + '件)</span>'
@@ -1574,7 +1676,20 @@ async function loadAll() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', loadAll);
+// ---- 日次リセット ----
+let _pollDate = null;
+function startDatePoller() {
+  _pollDate = new Date().toISOString().split('T')[0];
+  setInterval(() => {
+    const today = new Date().toISOString().split('T')[0];
+    if (today !== _pollDate) {
+      _pollDate = today;
+      loadAll();
+    }
+  }, 30 * 60 * 1000);
+}
+
+document.addEventListener('DOMContentLoaded', () => { loadAll(); startDatePoller(); });
 </script>
 </body>
 </html>
