@@ -22,6 +22,7 @@ noteへの誘導でマネタイズする。
 | doc/04_agents.md | 各エージェントの詳細仕様 |
 | doc/05_ui.md | 承認UIの仕様 |
 | doc/06_scene_map.md | 関係者・シーンマップ |
+| doc/07_model_cost.md | モデル割り振り・コスト最適化設計（必読） |
 
 ---
 
