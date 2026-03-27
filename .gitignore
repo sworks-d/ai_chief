@@ -14,6 +14,8 @@ data/personas/
 data/api_status.json
 data/engage_log.json
 data/logs/
+data/checked/
+data/queue/
 
 # OS
 .DS_Store

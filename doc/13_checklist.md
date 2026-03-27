@@ -687,8 +687,8 @@ node agents/poster.js --force
 @S_creative_AIに実際に投稿されることを確認する。
 投稿されたらUIのHISTORYに表示されることを確認する。
 
-- [ ] Xに実際に投稿される
-- [ ] 投稿後にDATAパネルのHISTORYに表示される
+- [x] Xに実際に投稿される（https://twitter.com/i/web/status/2037523996120588494）
+- [x] 投稿後にDATAパネルのHISTORYに表示される（/api/posts/published で posted_at 確認済み）
 
 ---
 

@@ -1,0 +1,74 @@
+[
+  {
+    "title": "Claude新機能：プロジェクト管理機能追加",
+    "source_url": "https://anthropic.com/news",
+    "source_name": "Anthropic公式",
+    "layer": "MICRO",
+    "theme_tag": "ツール",
+    "collected_at": "2026-03-27T13:33:25.175Z",
+    "first_published": "2026-03-27",
+    "summary_ja": "Anthropicがプロジェクト管理機能を追加。カスタムインストラクションと会話履歴の永続化が可能に。クリエイターのワークフロー管理に活用できる。",
+    "source_type": "公式",
+    "japan_circulation": "一部流通"
+  },
+  {
+    "title": "Runway Gen-4がリリース：映像制作が変わる",
+    "source_url": "https://runway.ml",
+    "source_name": "Runway公式Blog",
+    "layer": "MIDDLE",
+    "theme_tag": "ツール",
+    "collected_at": "2026-03-27T13:33:25.175Z",
+    "first_published": "2026-03-27",
+    "summary_ja": "Runway Gen-4が正式リリース。一貫したキャラクターとシーンで長尺動画の生成が可能に。映像ディレクターの仕事の仕方が変わる可能性。",
+    "source_type": "公式",
+    "japan_circulation": "未流通"
+  },
+  {
+    "title": "AI生成物の著作権、文化庁が新ガイドライン",
+    "source_url": "https://bunka.go.jp",
+    "source_name": "文化庁",
+    "layer": "MACRO",
+    "theme_tag": "著作権",
+    "collected_at": "2026-03-27T13:33:25.175Z",
+    "first_published": "2026-03-27",
+    "summary_ja": "文化庁がAI生成コンテンツの著作権に関する新ガイドラインを発表。クライアントワークへの影響と対応策を整理する必要がある。",
+    "source_type": "法律",
+    "japan_circulation": "バズ済み"
+  },
+  {
+    "title": "Claude新機能：プロジェクト管理機能追加",
+    "source_url": "https://anthropic.com/news",
+    "source_name": "Anthropic公式",
+    "layer": "MICRO",
+    "theme_tag": "ツール",
+    "collected_at": "2026-03-27T13:33:27.542Z",
+    "first_published": "2026-03-27",
+    "summary_ja": "Anthropicがプロジェクト管理機能を追加。カスタムインストラクションと会話履歴の永続化が可能に。クリエイターのワークフロー管理に活用できる。",
+    "source_type": "公式",
+    "japan_circulation": "一部流通"
+  },
+  {
+    "title": "Runway Gen-4がリリース：映像制作が変わる",
+    "source_url": "https://runway.ml",
+    "source_name": "Runway公式Blog",
+    "layer": "MIDDLE",
+    "theme_tag": "ツール",
+    "collected_at": "2026-03-27T13:33:27.542Z",
+    "first_published": "2026-03-27",
+    "summary_ja": "Runway Gen-4が正式リリース。一貫したキャラクターとシーンで長尺動画の生成が可能に。映像ディレクターの仕事の仕方が変わる可能性。",
+    "source_type": "公式",
+    "japan_circulation": "未流通"
+  },
+  {
+    "title": "AI生成物の著作権、文化庁が新ガイドライン",
+    "source_url": "https://bunka.go.jp",
+    "source_name": "文化庁",
+    "layer": "MACRO",
+    "theme_tag": "著作権",
+    "collected_at": "2026-03-27T13:33:27.542Z",
+    "first_published": "2026-03-27",
+    "summary_ja": "文化庁がAI生成コンテンツの著作権に関する新ガイドラインを発表。クライアントワークへの影響と対応策を整理する必要がある。",
+    "source_type": "法律",
+    "japan_circulation": "バズ済み"
+  }
+]
