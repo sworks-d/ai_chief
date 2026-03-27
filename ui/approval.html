@@ -1313,21 +1313,36 @@ function editThreadPost(postId, groupId) {
   }
 }
 
-// ---- THREADグループ：セットOK ----
+// ---- THREADグループ：セットOK → 承認+即時X thread投稿 ----
 async function approveGroup(groupId) {
   const el = document.getElementById('group-' + groupId);
   if (!el || el.classList.contains('approved')) return;
+  const okBtn = el.querySelector('.pa-ok');
+  okBtn.textContent = '投稿中...';
+  okBtn.disabled = true;
   try {
-    const res = await fetch('/api/approve-group/' + encodeURIComponent(groupId), { method: 'POST' });
-    if (!res.ok) throw new Error('API error');
+    const res = await fetch('/api/post-thread-now/' + encodeURIComponent(groupId), { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'API error');
     el.classList.add('approved');
-    el.querySelector('.pa-ok').textContent = '✓ 承認済み';
+    okBtn.textContent = '✓ 投稿済み';
     updateCount();
+    // 承認済みタブが開いていれば更新
     if (document.getElementById('qpanel-approved').classList.contains('active')) {
       loadApproved();
     }
+    // 投稿URLを表示
+    if (data.url) {
+      const urlBanner = document.createElement('div');
+      urlBanner.style.cssText = 'padding:6px 14px;font-family:var(--mono);font-size:9px;color:var(--green);border-top:1px solid var(--border)';
+      urlBanner.innerHTML = '✓ スレッド投稿完了: <a href="' + escAttr(data.url) + '" target="_blank" style="color:var(--blue)">' + escHtml(data.url) + '</a>';
+      el.insertBefore(urlBanner, el.querySelector('.tg-actions'));
+    }
   } catch (e) {
+    okBtn.textContent = '✗ 失敗';
+    okBtn.disabled = false;
     console.error('approveGroup failed', e);
+    alert('スレッド投稿失敗: ' + e.message);
   }
 }
 
@@ -1429,12 +1444,39 @@ function cancelEdit(postId, origText) {
 }
 
 // ---- Intel使用 ----
-function useIntel(btn) {
-  btn.textContent = '✓ キューに追加';
-  btn.style.color = 'var(--green)';
-  btn.style.borderColor = 'rgba(200,240,74,0.5)';
-  btn.style.background = 'rgba(200,240,74,0.08)';
+async function useIntel(btn, iid) {
+  const item = window._intelItems && window._intelItems[iid];
+  if (!item) return;
+  btn.textContent = '生成中...';
   btn.disabled = true;
+  btn.style.color = 'var(--amber)';
+  try {
+    const res = await fetch('/api/queue/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(item),
+    });
+    const data = await res.json();
+    if (data.success) {
+      btn.textContent = '✓ キューに追加';
+      btn.style.color = 'var(--green)';
+      btn.style.borderColor = 'rgba(200,240,74,0.5)';
+      btn.style.background = 'rgba(200,240,74,0.08)';
+      updateCount();
+      // QUEUEパネルの未承認タブを更新
+      loadQueue && loadQueue();
+    } else {
+      btn.textContent = '✗ 生成失敗';
+      btn.style.color = 'var(--red)';
+      btn.disabled = false;
+      console.error('useIntel error:', data.error);
+    }
+  } catch (e) {
+    btn.textContent = '✗ エラー';
+    btn.style.color = 'var(--red)';
+    btn.disabled = false;
+    console.error('useIntel fetch error', e);
+  }
 }
 
 // ---- ブックマーク ----
@@ -1504,7 +1546,7 @@ function buildIntelCard(item) {
     + '<div class="i-body">' + escHtml(item.summary_ja || '') + '</div>'
     + '<div class="' + noteClass + '">→ ' + escHtml(item.post_hint || '') + '</div>'
     + '<div class="i-actions">'
-    + '<button class="btn btn-use" onclick="useIntel(this)">' + btnLabel + '</button>'
+    + '<button class="btn btn-use" onclick="useIntel(this,\'' + escAttr(iid) + '\')">' + btnLabel + '</button>'
     + '<button class="btn" onclick="toggleBookmark(this,\'' + escAttr(iid) + '\')"' + bmStyle + '>' + bmLabel + '</button>'
     + '<button class="btn">skip</button>'
     + '</div>'
@@ -1678,7 +1720,7 @@ function buildThreadGroupCard(groupId, groupPosts) {
 
   // 各投稿（折りたたみ）
   html += '<div class="tg-posts">';
-  const posLabels = { 1: 'フック', 2: '手順', 3: '証拠', 4: 'note誘導' };
+  const posLabels = { 1: 'フック', 2: '手順', 3: '証拠', 4: '本音' };
   for (const post of groupPosts) {
     const pid = escAttr(post.id);
     const pos = post.thread_index || 1;
@@ -2233,6 +2275,17 @@ async function loadApiStatus() {
     wrap.style.display = 'flex';
   } catch {
     // スキップ
+  }
+}
+
+// ---- QUEUEパネルのみ再読み込み ----
+async function loadQueue() {
+  try {
+    const res = await fetch('/api/queue');
+    const data = await res.json();
+    renderQueue(data);
+  } catch (e) {
+    console.error('loadQueue error', e);
   }
 }
 

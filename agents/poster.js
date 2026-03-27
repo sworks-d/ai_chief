@@ -189,9 +189,9 @@ function getPlatformForCurrentSlot() {
   const hour = new Date().getHours();
   const threads = isThreadsEnabled();
 
-  if (hour >= 7 && hour < 9) return ['X'];
-  if (hour >= 12 && hour < 14) return threads ? ['Threads'] : ['X'];
-  if (hour >= 21 && hour < 23) return threads ? ['X', 'Threads'] : ['X'];
+  if (hour >= 7 && hour < 9) return ['X'];           // 朝7:30
+  if (hour >= 13 && hour < 15) return ['X'];          // 昼13:00（X専用）
+  if (hour >= 21 && hour < 23) return threads ? ['X', 'Threads'] : ['X'];  // 夜21:00
   return threads ? ['X', 'Threads'] : ['X'];
 }
 
@@ -381,10 +381,85 @@ async function postSingle(postId) {
   return result;
 }
 
+/**
+ * THREADグループを即時連結投稿（承認UI「セットOK」用）
+ * セットOKと同時に承認+X threadとして一括投稿する
+ */
+async function postThreadGroupNow(groupId, testMode = false) {
+  const today = new Date().toISOString().split('T')[0];
+  const queueFile = path.join(QUEUE_DIR, `${today}.json`);
+  if (!fs.existsSync(queueFile)) {
+    return { success: false, error: 'キューファイルが見つかりません' };
+  }
+
+  const queue = JSON.parse(fs.readFileSync(queueFile, 'utf-8'));
+  const posts = queue
+    .filter(p => p.thread_group === groupId)
+    .sort((a, b) => (a.thread_index || 0) - (b.thread_index || 0));
+
+  if (posts.length === 0) {
+    return { success: false, error: 'グループが見つかりません' };
+  }
+
+  // まず承認済みに更新
+  const now = new Date().toISOString();
+  for (const q of queue) {
+    if (q.thread_group === groupId) {
+      q.status = 'approved';
+      q.approved_at = now;
+    }
+  }
+  fs.writeFileSync(queueFile, JSON.stringify(queue, null, 2));
+
+  console.log(`[Poster] スレッド即時投稿: ${groupId} (${posts.length}投稿)`);
+
+  let prevTweetId = null;
+  const results = [];
+
+  for (const post of posts) {
+    if (testMode) {
+      const fakeId = `test_${Date.now()}`;
+      console.log(`[Poster][TEST] thread[${post.thread_index}]:\n${post.post_text}\n`);
+      updateQueueStatus(post.id, 'posted', { post_id: fakeId, url: 'https://test.example.com' });
+      logPost(post, { post_id: fakeId, url: 'https://test.example.com' });
+      prevTweetId = fakeId;
+      results.push({ thread_index: post.thread_index, success: true, url: 'https://test.example.com' });
+      continue;
+    }
+
+    try {
+      const client = getXClient();
+      const params = prevTweetId
+        ? { text: post.post_text, reply: { in_reply_to_tweet_id: prevTweetId } }
+        : post.post_text;
+      const response = prevTweetId
+        ? await client.readWrite.v2.tweet(params)
+        : await client.readWrite.v2.tweet(post.post_text);
+      const result = {
+        success: true,
+        post_id: response.data.id,
+        url: `https://twitter.com/i/web/status/${response.data.id}`,
+      };
+      updateQueueStatus(post.id, 'posted', result);
+      logPost(post, result);
+      prevTweetId = response.data.id;
+      results.push({ thread_index: post.thread_index, ...result });
+      console.log(`[Poster] スレッド[${post.thread_index}]投稿成功: ${result.url}`);
+      await new Promise(r => setTimeout(r, 2000)); // 2秒待機（API制限対応）
+    } catch (err) {
+      console.error(`[Poster] スレッド[${post.thread_index}]投稿エラー:`, err.message);
+      updateQueueStatus(post.id, 'failed');
+      return { success: false, error: err.message, results };
+    }
+  }
+
+  return { success: true, results, url: results[0]?.url };
+}
+
 if (require.main === module) {
   const testMode = process.argv.includes('--test');
   const forceMode = process.argv.includes('--force');
   main(testMode, forceMode).catch(console.error);
 }
 
-module.exports = { main, postSingle };
+module.exports = { main, postSingle, postThreadGroupNow };

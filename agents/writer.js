@@ -166,11 +166,6 @@ async function generateShortPost(item, platform, attempt = 1) {
 結果は具体的な変化で書く（「効率が上がった」ではなく「修正が3回→0回になった」）
 再現できる情報（プロンプト・ツール・手順）を1つ以上入れる
 
-### noteへの誘導
-プロンプト全文・詳細手順は「全部見せない」
-「残り」への期待を作ってから「詳細はnoteに置いてます」と自然に誘導
-（THREAD型でなくても部分的に見せて誘導できる）
-
 ### 週の推奨タイプ（今日）
 ${dayGuide}
 
@@ -257,11 +252,6 @@ async function generateThreadPosts(item) {
 結果は具体的な変化で書く（「修正が3回→0回」レベルの数字）
 再現できる情報を1つ以上入れる
 
-### noteへの誘導
-プロンプト全文・詳細手順はnoteで公開
-投稿では「一部だけ」見せる
-「残り」への期待を作ってからnoteに自然に誘導
-
 ---
 
 ## THREAD型の構成（4投稿セット）
@@ -269,7 +259,7 @@ async function generateThreadPosts(item) {
 投稿1（フック）：問題提起 + 結論だけ。「気になる人はリプ欄へ」
 投稿2（手順）：具体的な手順（番号付き）
 投稿3（証拠）：実際の結果・数字・プロンプトの一部だけ見せる（全部見せない）
-投稿4（note誘導）：Sの本音（カウンター）+ noteへの自然な誘導「全文はnoteに置いてます」
+投稿4（本音）：Sの本音（カウンター）。カジュアルに締める。外部URLへの誘導は入れない。
 
 各投稿：日本語140文字以内（X重み付き280文字以内）
 
@@ -309,7 +299,7 @@ async function generateThreadPosts(item) {
     },
     {
       "thread_index": 4,
-      "thread_role": "note誘導",
+      "thread_role": "本音",
       "post_text": "投稿4本文（140文字以内）"
     }
   ],
@@ -555,7 +545,7 @@ async function main(testMode = false) {
     items = JSON.parse(fs.readFileSync(INPUT_FILE, 'utf-8'));
   }
 
-  const targetItems = items.filter(i => i.info_type !== 'NG').slice(0, 5);
+  const targetItems = items.filter(i => i.info_type !== 'NG').slice(0, 8);
   console.log(`[Writer] ${targetItems.length}件から投稿を生成中...`);
 
   const allPosts = [];
@@ -584,9 +574,9 @@ async function main(testMode = false) {
   // 品質スコア順にソート
   allPosts.sort((a, b) => (b.quality_score || 0) - (a.quality_score || 0));
 
-  // X：上位5本、Threads：上位4本
+  // X：上位5本（8件生成からTOP5）、Threads：上位3本（6件生成からTOP3）
   const xPosts = allPosts.filter(p => p.platform === 'X').slice(0, 5);
-  const threadsPosts = allPosts.filter(p => p.platform === 'Threads').slice(0, 4);
+  const threadsPosts = allPosts.filter(p => p.platform === 'Threads').slice(0, 3);
   const queue = [...xPosts, ...threadsPosts];
 
   // 既存のキューと統合（approved/posted/rejectedは保持）
@@ -608,4 +598,4 @@ if (require.main === module) {
   main(testMode).catch(console.error);
 }
 
-module.exports = { main };
+module.exports = { main, generateShortPost, generatePostSet };

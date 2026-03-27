@@ -136,6 +136,62 @@ app.post('/api/reject/:id', (req, res) => {
 });
 
 /**
+ * POST /api/post-thread-now/:groupId
+ * THREAD型グループを承認+即時X thread投稿（セットOKボタン用）
+ */
+app.post('/api/post-thread-now/:groupId', async (req, res) => {
+  const result = await poster.postThreadGroupNow(req.params.groupId);
+  if (!result.success) {
+    return res.status(500).json(result);
+  }
+  res.json(result);
+});
+
+/**
+ * POST /api/queue/add
+ * INPUTパネル「投稿に使う」→ writer.jsで投稿生成してキューに追加
+ */
+app.post('/api/queue/add', async (req, res) => {
+  const item = req.body;
+  if (!item || !item.title) {
+    return res.status(400).json({ error: 'item情報が不足しています（title必須）' });
+  }
+  try {
+    const writer = require('./agents/writer');
+    const today = getToday();
+    const queueFile = path.join(DATA_DIR, 'queue', `${today}.json`);
+
+    const xPost = await writer.generateShortPost(item, 'X');
+    if (!xPost || (xPost.quality_score || 0) < 7.0) {
+      return res.status(400).json({ error: '品質基準（7.0）を満たす投稿が生成できませんでした' });
+    }
+    const postObj = {
+      ...xPost,
+      id: `${today}-X-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      platform: 'X',
+      source_item: item,
+      status: 'pending',
+      created_at: new Date().toISOString(),
+    };
+    // source_url付与（公式・業界メディアのみ）
+    if (item.source_url && ['公式', '業界メディア'].includes(item.source_type)) {
+      postObj.post_text = postObj.post_text + '\n' + item.source_url;
+      postObj.source_url = item.source_url;
+    }
+
+    const queue = readJSON(queueFile);
+    queue.push(postObj);
+    writeJSON(queueFile, queue);
+
+    console.log(`[Server] キューに追加: ${postObj.post_text.slice(0, 40)}...`);
+    res.json({ success: true, post: postObj });
+  } catch (e) {
+    console.error('[Server] queue/add error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/**
  * POST /api/approve-group/:groupId
  * THREAD型グループを一括承認
  */
