@@ -1,7 +1,7 @@
 /**
  * 承認UIサーバー
  * Sが毎朝5〜10分触る唯一の画面のバックエンド
- * アクセス：http://localhost:3000
+ * アクセス：http://localhost:3001
  */
 
 require('dotenv').config();
@@ -13,7 +13,7 @@ const poster = require('./agents/poster');
 const analyst = require('./agents/analyst');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 const DATA_DIR = path.join(__dirname, 'data');
 const PERSONAS_DIR = path.join(DATA_DIR, 'personas');
@@ -133,6 +133,54 @@ app.post('/api/reject/:id', (req, res) => {
   writeJSON(queueFile, queue);
 
   res.json({ success: true });
+});
+
+/**
+ * POST /api/approve-group/:groupId
+ * THREAD型グループを一括承認
+ */
+app.post('/api/approve-group/:groupId', (req, res) => {
+  const today = getToday();
+  const queueFile = path.join(DATA_DIR, 'queue', `${today}.json`);
+  const queue = readJSON(queueFile);
+  const groupId = req.params.groupId;
+
+  const targets = queue.filter(p => p.thread_group === groupId && p.status === 'pending');
+  if (targets.length === 0) {
+    return res.status(404).json({ error: 'グループが見つかりません' });
+  }
+  const now = new Date().toISOString();
+  for (const p of targets) {
+    p.status = 'approved';
+    p.approved_at = now;
+  }
+  writeJSON(queueFile, queue);
+  console.log(`[Server] グループ承認: ${groupId} (${targets.length}件)`);
+  res.json({ success: true, count: targets.length });
+});
+
+/**
+ * POST /api/reject-group/:groupId
+ * THREAD型グループを一括却下
+ */
+app.post('/api/reject-group/:groupId', (req, res) => {
+  const today = getToday();
+  const queueFile = path.join(DATA_DIR, 'queue', `${today}.json`);
+  const queue = readJSON(queueFile);
+  const groupId = req.params.groupId;
+
+  const targets = queue.filter(p => p.thread_group === groupId && p.status === 'pending');
+  if (targets.length === 0) {
+    return res.status(404).json({ error: 'グループが見つかりません' });
+  }
+  const now = new Date().toISOString();
+  for (const p of targets) {
+    p.status = 'rejected';
+    p.rejected_at = now;
+  }
+  writeJSON(queueFile, queue);
+  console.log(`[Server] グループ却下: ${groupId} (${targets.length}件)`);
+  res.json({ success: true, count: targets.length });
 });
 
 /**

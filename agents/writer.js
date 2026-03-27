@@ -267,9 +267,9 @@ async function generateThreadPosts(item) {
 ## THREAD型の構成（4投稿セット）
 
 投稿1（フック）：問題提起 + 結論だけ。「気になる人はリプ欄へ」
-投稿2（解決策）：具体的な手順（番号付き）
+投稿2（手順）：具体的な手順（番号付き）
 投稿3（証拠）：実際の結果・数字・プロンプトの一部だけ見せる（全部見せない）
-投稿4（誘導）：Sの本音（カウンター）+ noteへの自然な誘導「全文はnoteに置いてます」
+投稿4（note誘導）：Sの本音（カウンター）+ noteへの自然な誘導「全文はnoteに置いてます」
 
 各投稿：日本語140文字以内（X重み付き280文字以内）
 
@@ -299,7 +299,7 @@ async function generateThreadPosts(item) {
     },
     {
       "thread_index": 2,
-      "thread_role": "解決策",
+      "thread_role": "手順",
       "post_text": "投稿2本文（140文字以内）"
     },
     {
@@ -309,7 +309,7 @@ async function generateThreadPosts(item) {
     },
     {
       "thread_index": 4,
-      "thread_role": "誘導",
+      "thread_role": "note誘導",
       "post_text": "投稿4本文（140文字以内）"
     }
   ],
@@ -431,6 +431,10 @@ async function generatePostSet(item) {
   const format = determineFormat(item);
   console.log(`[Writer]   フォーマット: ${format}`);
 
+  // source_url付与条件
+  const qualifiedSourceTypes = ['公式', '業界メディア'];
+  const hasSourceUrl = item.source_url && qualifiedSourceTypes.includes(item.source_type);
+
   if (format === 'THREAD') {
     // THREAD型：4投稿セット（X専用）
     const threadResult = await generateThreadPosts(item);
@@ -456,6 +460,14 @@ async function generatePostSet(item) {
           created_at: new Date().toISOString(),
         });
       }
+      // フック（index=1）のみsource_urlを付与
+      if (hasSourceUrl) {
+        const hookPost = results.find(r => r.thread_index === 1);
+        if (hookPost) {
+          hookPost.post_text = hookPost.post_text + '\n' + item.source_url;
+          hookPost.source_url = item.source_url;
+        }
+      }
     } else {
       console.log('[Writer]   THREAD型品質不足 → SHORT型にフォールバック');
       // フォールバック: SHORT型で生成
@@ -474,12 +486,18 @@ async function generatePostSet(item) {
     for (let attempt = 1; attempt <= 2; attempt++) {
       const xPost = await generateShortPost(item, 'X', attempt);
       if (xPost && xPost.quality_score >= 7.0) {
-        results.push({
+        const postObj = {
           ...xPost,
           id: `${TODAY}-X-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
           platform: 'X', source_item: item, status: 'pending',
           created_at: new Date().toISOString(),
-        });
+        };
+        // source_url付与
+        if (hasSourceUrl) {
+          postObj.post_text = postObj.post_text + '\n' + item.source_url;
+          postObj.source_url = item.source_url;
+        }
+        results.push(postObj);
         break;
       }
       // 2回でも7.0未満 → 捨てる（doc/10_active_rules.md準拠）

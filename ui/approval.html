@@ -862,6 +862,105 @@ header {
 .st-pending { color: var(--amber); border-color: rgba(240,150,10,0.35); background: rgba(240,150,10,0.04); }
 .st-failed { color: var(--red); border-color: rgba(255,60,60,0.35); background: rgba(255,60,60,0.04); }
 
+/* ── THREAD GROUP CARD ── */
+.thread-group-card {
+  border: 1px solid rgba(200,240,74,0.25);
+  margin-bottom: 10px;
+  background: rgba(200,240,74,0.02);
+}
+.thread-group-card.approved { opacity: 0.45; pointer-events: none; }
+.thread-group-card.rejected { opacity: 0.25; pointer-events: none; }
+.tg-header {
+  padding: 10px 14px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.badge-thread {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  padding: 2px 7px;
+  border-radius: 100px;
+  border: 1px solid rgba(200,240,74,0.5);
+  color: var(--green);
+  background: rgba(200,240,74,0.06);
+}
+.tg-count {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--white3);
+  margin-left: auto;
+}
+.tg-posts { padding: 0 8px; }
+.tp-item {
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+}
+.tp-item:last-child { border-bottom: none; }
+.tp-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 6px;
+  cursor: pointer;
+  user-select: none;
+}
+.tp-header:hover { background: rgba(255,255,255,0.02); }
+.tp-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: var(--green);
+  min-width: 72px;
+}
+.tp-preview {
+  font-size: 11px;
+  color: var(--white3);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tp-chevron {
+  font-size: 8px;
+  color: var(--white3);
+  transition: transform 0.15s;
+}
+.tp-chevron.open { transform: rotate(180deg); }
+.tp-body {
+  display: none;
+  padding: 0 6px 10px;
+}
+.tp-body.open { display: block; }
+.tp-text {
+  font-size: 12px;
+  color: var(--white2);
+  line-height: 1.7;
+  white-space: pre-line;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  margin-bottom: 4px;
+}
+.tp-edit-btn {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--white3);
+  background: none;
+  border: 1px solid var(--border);
+  padding: 3px 8px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+}
+.tp-edit-btn:hover { color: var(--white); border-color: var(--border2); }
+.tg-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border-top: 1px solid var(--border);
+}
+
 /* ── APPROVED CARD ACTIONS ── */
 .pa-del { color: var(--red); font-size: 14px; font-family: var(--sans); }
 .pa-del:hover { background: rgba(255,60,60,0.07); }
@@ -1165,6 +1264,88 @@ function updateCount(n) {
   document.getElementById('h-badge').textContent = v;
 }
 
+// ---- THREADグループ：投稿の展開/折りたたみ ----
+function toggleThreadPost(postId) {
+  const body = document.getElementById('tp-body-' + postId);
+  const chev = document.getElementById('tp-chev-' + postId);
+  if (!body) return;
+  const isOpen = body.classList.toggle('open');
+  if (chev) chev.classList.toggle('open', isOpen);
+}
+
+// ---- THREADグループ：個別投稿のインライン編集 ----
+function editThreadPost(postId, groupId) {
+  const textEl = document.getElementById('tp-text-' + postId);
+  if (!textEl) return;
+  // 既に編集中なら何もしない
+  if (textEl.querySelector('textarea')) return;
+  const origText = textEl.textContent;
+  // 展開する
+  const body = document.getElementById('tp-body-' + postId);
+  const chev = document.getElementById('tp-chev-' + postId);
+  if (body && !body.classList.contains('open')) {
+    body.classList.add('open');
+    if (chev) chev.classList.add('open');
+  }
+  textEl.innerHTML = '<textarea style="width:100%;min-height:100px;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:8px;font-size:12px;line-height:1.6;resize:vertical;box-sizing:border-box;">' + escHtml(origText) + '</textarea>';
+  const editBtn = textEl.nextElementSibling;
+  if (editBtn) {
+    editBtn.textContent = '保存';
+    editBtn.onclick = async function() {
+      const ta = textEl.querySelector('textarea');
+      if (!ta) return;
+      const newText = ta.value.trim();
+      if (!newText) return;
+      try {
+        const res = await fetch('/api/edit/' + encodeURIComponent(postId), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ post_text: newText }),
+        });
+        if (!res.ok) throw new Error('API error');
+        textEl.textContent = newText;
+        editBtn.textContent = '✎ 編集';
+        editBtn.onclick = function() { editThreadPost(postId, groupId); };
+      } catch (e) {
+        alert('保存失敗: ' + e.message);
+      }
+    };
+  }
+}
+
+// ---- THREADグループ：セットOK ----
+async function approveGroup(groupId) {
+  const el = document.getElementById('group-' + groupId);
+  if (!el || el.classList.contains('approved')) return;
+  try {
+    const res = await fetch('/api/approve-group/' + encodeURIComponent(groupId), { method: 'POST' });
+    if (!res.ok) throw new Error('API error');
+    el.classList.add('approved');
+    el.querySelector('.pa-ok').textContent = '✓ 承認済み';
+    updateCount();
+    if (document.getElementById('qpanel-approved').classList.contains('active')) {
+      loadApproved();
+    }
+  } catch (e) {
+    console.error('approveGroup failed', e);
+  }
+}
+
+// ---- THREADグループ：セットNG ----
+async function rejectGroup(groupId) {
+  const el = document.getElementById('group-' + groupId);
+  if (!el || el.classList.contains('rejected')) return;
+  try {
+    const res = await fetch('/api/reject-group/' + encodeURIComponent(groupId), { method: 'POST' });
+    if (!res.ok) throw new Error('API error');
+    el.classList.add('rejected');
+    el.querySelector('.pa-ng').textContent = '✕ 却下済み';
+    updateCount();
+  } catch (e) {
+    console.error('rejectGroup failed', e);
+  }
+}
+
 // ---- 承認 ----
 async function approvePost(postId) {
   const el = document.getElementById('post-' + postId);
@@ -1455,8 +1636,8 @@ function buildPostCard(post, pid) {
   const trustClass = trust === 'HIGH' ? 'tr-h' : 'tr-m';
   const trustLabel = trust || 'MID';
   const srcName = (post.source_item && post.source_item.source_name) || '—';
-  const srcUrl = (post.source_item && post.source_item.source_url) || '';
-  const srcLink = srcUrl ? ' <a class="src-link" href="' + escAttr(srcUrl) + '" target="_blank">↗</a>' : '';
+  const srcUrl = post.source_url || (post.source_item && post.source_item.source_url) || '';
+  const srcLink = srcUrl ? ' <a class="src-link" href="' + escAttr(srcUrl) + '" target="_blank">↗ ソース</a>' : '';
   const postTypeNum = post.post_type || '';
   const priorityTypes = ['型⑤','型⑥','型⑦'];
   const alertTypes = ['型③','型④'];
@@ -1474,6 +1655,60 @@ function buildPostCard(post, pid) {
            postTypeTag, themeTag, charTag, threadTag, score, l1, l2, l3 };
 }
 
+// ---- THREADグループカードHTML生成 ----
+function buildThreadGroupCard(groupId, groupPosts) {
+  const rep = groupPosts[0]; // 代表投稿（品質スコア等）
+  const c = buildPostCard(rep, escAttr(rep.id));
+  const gid = escAttr(groupId);
+
+  // グループヘッダー
+  let html = '<div class="thread-group-card" id="group-' + gid + '">'
+    + '<div class="tg-header">'
+    + '<span class="badge-thread">THREAD</span>'
+    + '<div class="tags">' + c.postTypeTag + c.themeTag + c.charTag + '</div>'
+    + '<span class="score">' + c.score + '</span>'
+    + '<span class="tg-count">4投稿セット</span>'
+    + '</div>';
+
+  // SRCとL1〜L3
+  html += '<div class="p-src" style="padding:6px 14px">'
+    + '<span class="src-label">SRC</span>'
+    + '<div class="src-item">' + escHtml(c.srcName) + ' <span class="trust ' + c.trustClass + '">' + c.trustLabel + '</span>' + c.srcLink + '</div>'
+    + '</div>';
+
+  // 各投稿（折りたたみ）
+  html += '<div class="tg-posts">';
+  const posLabels = { 1: 'フック', 2: '手順', 3: '証拠', 4: 'note誘導' };
+  for (const post of groupPosts) {
+    const pid = escAttr(post.id);
+    const pos = post.thread_index || 1;
+    const label = pos + '/4 ' + (posLabels[pos] || post.thread_role || '');
+    const preview = (post.post_text || '').replace(/\n/g, ' ').slice(0, 30) + '…';
+    html += '<div class="tp-item">'
+      + '<div class="tp-header" onclick="toggleThreadPost(\'' + pid + '\')">'
+      + '<span class="tp-label">' + escHtml(label) + '</span>'
+      + '<span class="tp-preview" id="tp-prev-' + pid + '">' + escHtml(preview) + '</span>'
+      + '<span class="tp-chevron" id="tp-chev-' + pid + '">▼</span>'
+      + '</div>'
+      + '<div class="tp-body" id="tp-body-' + pid + '">'
+      + '<div class="tp-text" id="tp-text-' + pid + '">' + escHtml(post.post_text || '') + '</div>'
+      + '<button class="tp-edit-btn" onclick="editThreadPost(\'' + pid + '\',\'' + gid + '\')">✎ 編集</button>'
+      + '</div>'
+      + '</div>';
+  }
+  html += '</div>';
+
+  // グループアクションボタン
+  html += '<div class="tg-actions">'
+    + '<button class="pa pa-ok" onclick="approveGroup(\'' + gid + '\')">✓ セットOK</button>'
+    + '<button class="pa pa-ng" onclick="rejectGroup(\'' + gid + '\')">✕ セットNG</button>'
+    + '<button class="pa pa-ed" onclick="editThreadPost(\'' + escAttr(groupPosts[0].id) + '\',\'' + gid + '\')">✎ 編集</button>'
+    + '</div>'
+    + '</div>';
+
+  return html;
+}
+
 // ---- Queue パネル描画（未承認タブ）----
 function renderQueue(posts) {
   const body = document.getElementById('queue-body-pending');
@@ -1483,13 +1718,36 @@ function renderQueue(posts) {
     return;
   }
   updateCount(posts.length);
-  body.innerHTML = posts.map(post => {
+
+  // THREAD型をグループ化、SHORT型は個別
+  const groups = {};
+  const singles = [];
+  for (const post of posts) {
+    if (post.thread_group) {
+      if (!groups[post.thread_group]) groups[post.thread_group] = [];
+      groups[post.thread_group].push(post);
+    } else {
+      singles.push(post);
+    }
+  }
+  // グループ内をthread_index順にソート
+  for (const gid of Object.keys(groups)) {
+    groups[gid].sort((a, b) => (a.thread_index || 0) - (b.thread_index || 0));
+  }
+
+  let html = '';
+  // THREADグループカード
+  for (const [groupId, groupPosts] of Object.entries(groups)) {
+    html += buildThreadGroupCard(groupId, groupPosts);
+  }
+  // SHORT型カード
+  for (const post of singles) {
     const pid = escAttr(post.id);
     const c = buildPostCard(post, pid);
-    return '<div class="post" id="post-' + pid + '">'
+    html += '<div class="post" id="post-' + pid + '">'
       + '<div class="p-head">'
       + '<span class="platform ' + c.platformClass + '" style="cursor:pointer" title="クリックでX/Threads切替" onclick="togglePlatform(\'' + pid + '\')">' + c.platformLabel + '</span>'
-      + '<div class="tags">' + c.postTypeTag + c.themeTag + c.charTag + c.threadTag + '</div>'
+      + '<div class="tags">' + c.postTypeTag + c.themeTag + c.charTag + '</div>'
       + '<span class="score">' + c.score + '</span>'
       + '</div>'
       + '<div class="p-src"><span class="src-label">SRC</span>'
@@ -1509,7 +1767,8 @@ function renderQueue(posts) {
       + '<button class="pa pa-ed" onclick="editPost(\'' + pid + '\')">✎</button>'
       + '</div>'
       + '</div>';
-  }).join('');
+  }
+  body.innerHTML = html;
 }
 
 // ---- 承認済みパネル描画 ----
