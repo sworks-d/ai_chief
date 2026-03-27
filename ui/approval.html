@@ -1,1 +1,1244 @@
-<!-- placeholder -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S — BRIEF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --black: #0a0a0a;
+  --black2: #111111;
+  --black3: #181818;
+  --black4: #222222;
+  --white: #f5f2ed;
+  --white2: #a0a09a;
+  --white3: #555550;
+  --white4: #2a2a28;
+  --green: #c8f04a;
+  --red: #ff3c3c;
+  --amber: #f0960a;
+  --blue: #5090f0;
+  --pink: #f06090;
+  --border: rgba(245,242,237,0.08);
+  --border2: rgba(245,242,237,0.16);
+  --display: 'Bebas Neue', sans-serif;
+  --sans: 'Noto Sans JP', sans-serif;
+  --mono: 'IBM Plex Mono', monospace;
+}
+
+html { font-size: 14px; }
+
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  height: 56px;
+  background: var(--black);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+}
+
+.h-logo {
+  font-family: var(--display);
+  font-size: 32px;
+  letter-spacing: 0.04em;
+  color: var(--white);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.h-sub {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--white3);
+  text-transform: uppercase;
+  line-height: 1.3;
+  display: none;
+}
+
+@media (min-width: 600px) { .h-sub { display: block; } }
+
+.h-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.h-date {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--white3);
+  letter-spacing: 0.08em;
+}
+
+.h-live {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--green);
+  letter-spacing: 0.12em;
+}
+
+.h-live::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.h-pending {
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  color: var(--black);
+  background: var(--green);
+  padding: 3px 10px;
+  border-radius: 100px;
+  line-height: 1;
+}
+
+/* ── LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1000px) {
+  .layout {
+    grid-template-columns: 300px 1fr 280px;
+    min-height: calc(100vh - 56px);
+  }
+}
+
+/* ── PANEL ── */
+.panel {
+  border-right: 1px solid var(--border);
+  display: none;
+}
+
+.panel.active { display: block; }
+
+@media (min-width: 1000px) {
+  .panel { display: block !important; }
+  .panel:last-child { border-right: none; }
+}
+
+/* ── PANEL HEADER ── */
+.panel-head {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.panel-title {
+  font-family: var(--display);
+  font-size: 36px;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  color: var(--white);
+}
+
+.panel-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--white3);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.panel-count {
+  margin-left: auto;
+  font-family: var(--display);
+  font-size: 24px;
+  color: var(--green);
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+/* ── PANEL BODY ── */
+.panel-body { padding: 16px 20px; }
+
+/* ── INTEL CARD ── */
+.intel {
+  border: 1px solid var(--border);
+  margin-bottom: 10px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.intel:hover { border-color: var(--border2); }
+
+.i-bar {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+}
+.i-bar-w { background: var(--white2); }
+.i-bar-a { background: var(--amber); }
+.i-bar-b { background: var(--blue); }
+
+.i-inner { padding: 12px 14px 12px 18px; }
+
+.i-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.i-title {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--white);
+  flex: 1;
+  letter-spacing: 0.01em;
+}
+
+.tags { display: flex; gap: 4px; flex-wrap: wrap; flex-shrink: 0; }
+
+.tag {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 100px;
+  border: 1px solid;
+  white-space: nowrap;
+  line-height: 1.6;
+}
+
+.t-w { color: var(--white2); border-color: var(--border2); }
+.t-g { color: var(--green); border-color: rgba(200,240,74,0.35); background: rgba(200,240,74,0.04); }
+.t-a { color: var(--amber); border-color: rgba(240,150,10,0.35); background: rgba(240,150,10,0.04); }
+.t-b { color: var(--blue); border-color: rgba(80,144,240,0.35); background: rgba(80,144,240,0.04); }
+.t-r { color: var(--red); border-color: rgba(255,60,60,0.35); background: rgba(255,60,60,0.04); }
+
+.i-body {
+  font-size: 11px;
+  color: var(--white2);
+  line-height: 1.7;
+  margin-bottom: 8px;
+  letter-spacing: 0.01em;
+}
+
+.i-note {
+  font-size: 11px;
+  line-height: 1.65;
+  padding: 7px 10px;
+  border-left: 2px solid var(--border2);
+  margin-bottom: 10px;
+  color: var(--white2);
+}
+
+.i-note-a { border-color: var(--amber); color: rgba(240,150,10,0.85); }
+.i-note-b { border-color: var(--blue); }
+
+.i-actions { display: flex; gap: 6px; }
+
+.btn {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--white2);
+  border-radius: 100px;
+  padding: 5px 12px;
+  font-family: var(--mono);
+  font-size: 10px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: all 0.12s;
+  line-height: 1.4;
+}
+
+.btn:hover { border-color: var(--white); color: var(--white); }
+
+.btn-use {
+  flex: 1;
+  color: var(--green);
+  border-color: rgba(200,240,74,0.3);
+  background: rgba(200,240,74,0.03);
+}
+
+.btn-use:hover { background: rgba(200,240,74,0.1); border-color: var(--green); }
+
+/* ── POST CARD ── */
+.post {
+  border: 1px solid var(--border);
+  margin-bottom: 14px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+  animation: rise 0.3s ease both;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.post:nth-child(1) { animation-delay: 0.04s; }
+.post:nth-child(2) { animation-delay: 0.09s; }
+.post:nth-child(3) { animation-delay: 0.14s; }
+
+.post.approved { border-color: rgba(200,240,74,0.25); opacity: 0.5; }
+.post.rejected { border-color: rgba(255,60,60,0.2); opacity: 0.3; }
+
+/* post head */
+.p-head {
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.platform {
+  font-family: var(--display);
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  border: 1px solid;
+  border-radius: 100px;
+  padding: 0 10px 1px;
+  line-height: 1.6;
+}
+
+.px { color: var(--white); border-color: var(--border2); }
+.pt { color: var(--blue); border-color: rgba(80,144,240,0.3); }
+
+.score {
+  margin-left: auto;
+  font-family: var(--display);
+  font-size: 22px;
+  color: var(--green);
+  letter-spacing: 0.03em;
+  line-height: 1;
+}
+
+/* source strip */
+.p-src {
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: rgba(255,255,255,0.015);
+}
+
+.src-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--white4);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.src-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--white2);
+}
+
+.trust {
+  font-family: var(--mono);
+  font-size: 7px;
+  padding: 1px 5px;
+  border-radius: 100px;
+  border: 1px solid;
+  letter-spacing: 0.06em;
+  line-height: 1.6;
+}
+
+.tr-h { color: var(--green); border-color: rgba(200,240,74,0.35); }
+.tr-m { color: var(--amber); border-color: rgba(240,150,10,0.35); }
+
+.src-link {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--white3);
+  text-decoration: none;
+  margin-left: 2px;
+}
+.src-link:hover { color: var(--white); }
+
+/* layers */
+.p-layer-toggle {
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  background: rgba(255,255,255,0.01);
+  transition: background 0.1s;
+}
+
+.p-layer-toggle:hover { background: rgba(255,255,255,0.025); }
+
+.layer-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--white3);
+  letter-spacing: 0.1em;
+  flex: 1;
+  text-transform: uppercase;
+}
+
+.chevron {
+  font-size: 8px;
+  color: var(--white3);
+  transition: transform 0.2s;
+  display: inline-block;
+}
+.chevron.open { transform: rotate(180deg); }
+
+.layers { display: none; border-bottom: 1px solid var(--border); }
+.layers.open { display: block; }
+
+.lrow {
+  display: flex;
+  gap: 10px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+.lrow:last-child { border-bottom: none; }
+
+.lid {
+  font-family: var(--mono);
+  font-size: 8px;
+  padding: 2px 7px;
+  border-radius: 100px;
+  border: 1px solid;
+  flex-shrink: 0;
+  margin-top: 2px;
+  letter-spacing: 0.06em;
+  line-height: 1.6;
+}
+
+.l1c { color: var(--blue); border-color: rgba(80,144,240,0.35); }
+.l2c { color: var(--white2); border-color: var(--border2); }
+.l3c { color: var(--green); border-color: rgba(200,240,74,0.35); }
+
+.ltext {
+  font-size: 11px;
+  color: var(--white2);
+  line-height: 1.7;
+}
+
+/* post body */
+.p-body {
+  padding: 14px;
+  font-size: 13px;
+  color: var(--white);
+  line-height: 1.9;
+  white-space: pre-line;
+  letter-spacing: 0.015em;
+}
+
+/* post actions */
+.p-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 44px;
+  border-top: 1px solid var(--border);
+}
+
+.pa {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--display);
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: background 0.12s;
+}
+
+.pa-ok { color: var(--green); border-right: 1px solid var(--border); }
+.pa-ok:hover { background: rgba(200,240,74,0.07); }
+.pa-ng { color: var(--red); border-right: 1px solid var(--border); }
+.pa-ng:hover { background: rgba(255,60,60,0.07); }
+.pa-ed { color: var(--white3); font-size: 14px; font-family: var(--sans); }
+.pa-ed:hover { color: var(--white2); background: var(--black3); }
+
+/* ── STATS ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.stat {
+  background: var(--black);
+  padding: 14px 12px;
+}
+
+.stat-lbl {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--white3);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.stat-num {
+  font-family: var(--display);
+  font-size: 30px;
+  color: var(--white);
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.stat-d {
+  font-family: var(--mono);
+  font-size: 10px;
+  margin-top: 4px;
+}
+
+.up { color: var(--green); }
+.dn { color: var(--red); }
+
+/* mvp */
+.mvp {
+  border: 1px solid var(--border);
+  padding: 14px;
+  margin-bottom: 14px;
+  position: relative;
+}
+
+.mvp::before {
+  content: 'MVP';
+  position: absolute;
+  top: -1px; right: 12px;
+  font-family: var(--display);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  background: var(--amber);
+  color: var(--black);
+  padding: 1px 8px;
+  border-radius: 0 0 4px 4px;
+}
+
+.mvp-text {
+  font-size: 12px;
+  color: var(--white2);
+  line-height: 1.7;
+  margin-bottom: 10px;
+  margin-top: 4px;
+}
+
+.mvp-row { display: flex; gap: 14px; }
+
+.mvp-stat {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--white3);
+}
+
+.mvp-stat em { color: var(--white2); font-style: normal; font-weight: 700; }
+
+/* section divider */
+.s-div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0 12px;
+}
+
+.s-div-label {
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  color: var(--white3);
+  flex-shrink: 0;
+}
+
+.s-div-line { flex: 1; height: 1px; background: var(--border); }
+
+/* analyst rows */
+.arow {
+  display: flex;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+.arow:last-of-type { border-bottom: none; }
+
+.adot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 7px;
+}
+
+.ad-g { background: var(--green); }
+.ad-a { background: var(--amber); }
+.ad-b { background: var(--blue); }
+.ad-r { background: var(--red); }
+
+.atxt { font-size: 12px; color: var(--white2); line-height: 1.7; }
+.atxt strong { color: var(--white); font-weight: 500; }
+
+/* persona card */
+.persona {
+  border: 1px solid var(--border);
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.persona-head {
+  background: var(--black2);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.p-rank {
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  border-radius: 100px;
+  border: 1px solid;
+  padding: 0 9px 1px;
+  line-height: 1.6;
+}
+
+.pr-core { color: var(--white); border-color: var(--border2); }
+.pr-grow { color: var(--blue); border-color: rgba(80,144,240,0.35); }
+.pr-wild { color: var(--amber); border-color: rgba(240,150,10,0.35); }
+
+.p-name { font-size: 11px; font-weight: 500; color: var(--white); line-height: 1.4; }
+
+.persona-body { padding: 10px 12px; }
+
+.p-desc { font-size: 11px; color: var(--white2); line-height: 1.7; margin-bottom: 8px; }
+
+.chips { display: flex; gap: 4px; flex-wrap: wrap; }
+
+.chip {
+  font-size: 10px;
+  color: var(--white3);
+  background: var(--black3);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 100px;
+  line-height: 1.6;
+}
+
+/* chart */
+.chart-wrap { margin-top: 16px; }
+
+.chart-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.chart-lbl {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--white3);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.chart-val {
+  font-family: var(--display);
+  font-size: 18px;
+  color: var(--green);
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 28px;
+}
+
+.bar {
+  flex: 1;
+  background: var(--black3);
+  border-radius: 1px 1px 0 0;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.bar:hover { background: var(--white3); }
+.bar.today { background: var(--white); }
+
+/* ── BOTTOM NAV ── */
+.bnav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--black);
+  border-top: 1px solid var(--border);
+  display: flex;
+  z-index: 200;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (min-width: 1000px) { .bnav { display: none; } }
+
+.bt {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 0 8px;
+  cursor: pointer;
+  transition: color 0.12s;
+  position: relative;
+  color: var(--white3);
+}
+
+.bt.active { color: var(--white); }
+
+.bt-icon {
+  font-family: var(--display);
+  font-size: 18px;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.bt-label {
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.bt-badge {
+  position: absolute;
+  top: 7px;
+  right: calc(50% - 20px);
+  background: var(--green);
+  color: var(--black);
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 700;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* padding for bottom nav */
+@media (max-width: 999px) {
+  .layout { padding-bottom: 72px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-logo">S — BRIEF</div>
+  <div class="h-sub">DAILY INPUT<br>APPROVE · ANALYZE</div>
+  <div class="h-right">
+    <span class="h-date">03.27 · 07:02</span>
+    <span class="h-live">LIVE</span>
+    <span class="h-pending" id="h-badge">3</span>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- INPUT -->
+  <div class="panel active" id="panel-intel">
+    <div class="panel-head">
+      <span class="panel-title">INPUT</span>
+      <span class="panel-label">今日のインプット</span>
+    </div>
+    <div class="panel-body">
+
+      <div class="intel">
+        <div class="i-bar i-bar-w"></div>
+        <div class="i-inner">
+          <div class="i-top">
+            <div class="i-title">Runway Gen-4、映像の一貫性が大幅向上</div>
+            <div class="tags">
+              <span class="tag t-a">🔥 初出</span>
+              <span class="tag t-g">HIGH</span>
+            </div>
+          </div>
+          <div class="i-body">キャラクター・背景の同一性が前世代から大幅改善。海外の映像ディレクターが「ようやく実案件レベル」と評価し始めている。プロ向けプランは月$95〜。</div>
+          <div class="i-note">→ カンプ・仮編集・イメージボードでの実用性が一気に上がる可能性。撮影前のクライアント確認に使えるかも。</div>
+          <div class="i-actions">
+            <button class="btn btn-use" onclick="useIntel(this)">+ 投稿に使う</button>
+            <button class="btn">skip</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="intel">
+        <div class="i-bar i-bar-b"></div>
+        <div class="i-inner">
+          <div class="i-top">
+            <div class="i-title">EU AI Act、商用コンテンツへの開示義務が明確化</div>
+            <div class="tags">
+              <span class="tag t-b">MACRO</span>
+              <span class="tag t-g">HIGH</span>
+            </div>
+          </div>
+          <div class="i-body">欧州でAI生成コンテンツの「AI生成」明記が義務化へ。広告・マーケティング素材が対象。グローバルクライアントを持つ制作会社への影響は大きい。</div>
+          <div class="i-note i-note-b">→ クライアントへのAI使用開示をどうするか、の議論が加速する。今から言い方を整理しておく価値あり。</div>
+          <div class="i-actions">
+            <button class="btn btn-use" onclick="useIntel(this)">+ 投稿に使う</button>
+            <button class="btn">skip</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="intel">
+        <div class="i-bar i-bar-a"></div>
+        <div class="i-inner">
+          <div class="i-top">
+            <div class="i-title">Adobe Firefly、著作権帰属ユーザーに——海外で訴訟継続中</div>
+            <div class="tags">
+              <span class="tag t-r">⚠ 注意</span>
+              <span class="tag t-b">MID</span>
+            </div>
+          </div>
+          <div class="i-body">Adobeは「商用利用OK・著作権はユーザー帰属」と明言。ただし欧米の法律家からは「学習データの出所問題が残っている」との指摘も継続。</div>
+          <div class="i-note i-note-a">→ メリット有り・注意も有り。両論で出すと信頼性が上がる。</div>
+          <div class="i-actions">
+            <button class="btn btn-use" onclick="useIntel(this)">+ 両論で使う</button>
+            <button class="btn">skip</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- QUEUE -->
+  <div class="panel" id="panel-queue">
+    <div class="panel-head">
+      <span class="panel-title">QUEUE</span>
+      <span class="panel-label">承認キュー</span>
+      <span class="panel-count" id="q-count">3</span>
+    </div>
+    <div class="panel-body">
+
+      <!-- POST 1 -->
+      <div class="post" id="post1">
+        <div class="p-head">
+          <span class="platform px">X</span>
+          <div class="tags">
+            <span class="tag t-b">型①</span>
+            <span class="tag t-w">カメラマン</span>
+            <span class="tag t-w">ツール事例</span>
+          </div>
+          <span class="score">8.7</span>
+        </div>
+        <div class="p-src">
+          <span class="src-label">SRC</span>
+          <div class="src-item">Runway公式Blog <span class="trust tr-h">HIGH</span> <a class="src-link" href="#">↗</a></div>
+          <div class="src-item">X英語圏実使用報告 <span class="trust tr-m">MID</span></div>
+        </div>
+        <div class="p-layer-toggle" onclick="toggleLayer(this)">
+          <span class="layer-label">3層構造を展開</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="layers">
+          <div class="lrow">
+            <span class="lid l1c">L1</span>
+            <div class="ltext">Runway Gen-4が正式リリース。公式発表でキャラクター・背景の一貫性が「大幅改善」と明記。海外の映像ディレクターが実案件での使用報告を開始。</div>
+          </div>
+          <div class="lrow">
+            <span class="lid l2c">L2</span>
+            <div class="ltext">仮編集でカメラマンに見せたところ「どこで撮ったんですか？」と聞かれた。Gen-3では出なかったリアクション。イメージボード段階では実用レベルに入ってきた手応え。</div>
+          </div>
+          <div class="lrow">
+            <span class="lid l3c">L3</span>
+            <div class="ltext">撮影前のクライアント合意に使える。ただし本番素材にはまだ検証が必要。詳しいフローはnoteで公開予定。</div>
+          </div>
+        </div>
+        <div class="p-body">Runway Gen-4、仮編集で触ってみた。
+
+公式が「一貫性を大幅改善」って発表してたけど、
+実際どうなのかが気になってたんよ。
+
+カメラマンにカンプ見せたら
+「これ、どこで撮ったんですか？」って言われた。
+
+Gen-3では出なかったリアクション。
+
+まだ本番素材には使えないけど、
+イメージボードやコンテの段階なら
+普通に実用レベルになってきたと思う。
+
+たぶん。笑</div>
+        <div class="p-actions">
+          <button class="pa pa-ok" onclick="approvePost('post1')">OK</button>
+          <button class="pa pa-ng" onclick="rejectPost('post1')">NG</button>
+          <button class="pa pa-ed">✎</button>
+        </div>
+      </div>
+
+      <!-- POST 2 -->
+      <div class="post" id="post2">
+        <div class="p-head">
+          <span class="platform pt">THREADS</span>
+          <div class="tags">
+            <span class="tag t-r">型③</span>
+            <span class="tag t-w">著作権</span>
+            <span class="tag t-w">両論</span>
+          </div>
+          <span class="score">8.3</span>
+        </div>
+        <div class="p-src">
+          <span class="src-label">SRC</span>
+          <div class="src-item">Adobe公式発表 <span class="trust tr-h">HIGH</span> <a class="src-link" href="#">↗</a></div>
+          <div class="src-item">海外法律家の反論記事 <span class="trust tr-m">MID</span></div>
+        </div>
+        <div class="p-layer-toggle" onclick="toggleLayer(this)">
+          <span class="layer-label">3層構造を展開</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="layers">
+          <div class="lrow">
+            <span class="lid l1c">L1</span>
+            <div class="ltext">AdobeはFireflyの商用利用OKを明言し著作権はユーザーに帰属すると発表。ただし欧米の法律家複数が「学習データの問題が残っている」と指摘。</div>
+          </div>
+          <div class="lrow">
+            <span class="lid l2c">L2</span>
+            <div class="ltext">クライアントに「AIで作りました」と言う時の根拠として使えるようになってきた。ただし聞かれた時の答え方はまだ整理しきれていない。</div>
+          </div>
+          <div class="lrow">
+            <span class="lid l3c">L3</span>
+            <div class="ltext">「完全に安全」ではなく「今のところ使える根拠がある」という理解が正確。両論で伝えると読者の信頼が上がる。</div>
+          </div>
+        </div>
+        <div class="p-body">AI著作権の話、また動きがあった。
+
+AdobeがFireflyについて
+「商用OK・著作権はユーザー帰属」って明言した。
+
+クライアントに使った根拠を出せるようになる。
+
+ただ、海外では法律家が
+「学習データの問題が残ってる」って指摘してるのも事実で。
+
+完全に解決したわけじゃないんよね。
+
+使える根拠が増えた、くらいに理解してる。
+
+…みんな、どう説明してるんやろ。笑</div>
+        <div class="p-actions">
+          <button class="pa pa-ok" onclick="approvePost('post2')">OK</button>
+          <button class="pa pa-ng" onclick="rejectPost('post2')">NG</button>
+          <button class="pa pa-ed">✎</button>
+        </div>
+      </div>
+
+      <!-- POST 3 -->
+      <div class="post" id="post3">
+        <div class="p-head">
+          <span class="platform px">X</span>
+          <div class="tags">
+            <span class="tag t-g">型⑦</span>
+            <span class="tag t-w">代理店</span>
+            <span class="tag t-w">効率化</span>
+          </div>
+          <span class="score">7.9</span>
+        </div>
+        <div class="p-src">
+          <span class="src-label">SRC</span>
+          <div class="src-item">自社実績（昨日の案件） <span class="trust tr-h">実体験</span></div>
+        </div>
+        <div class="p-layer-toggle" onclick="toggleLayer(this)">
+          <span class="layer-label">3層構造を展開</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="layers">
+          <div class="lrow">
+            <span class="lid l1c">L1</span>
+            <div class="ltext">代理店から前日17時に「翌朝イチで3パターン」の依頼。Claudeでオリエン構造化→構成案5つ出力→Fireflyでビジュアル生成→2時間で3パターン完成。</div>
+          </div>
+          <div class="lrow">
+            <span class="lid l2c">L2</span>
+            <div class="ltext">以前なら確実に徹夜だった案件がAIで2時間に。ソルジャーの無茶振りを「吸収できる体制」に変わったという実感。品質は本番レベルではないが提案レベルは十分。</div>
+          </div>
+          <div class="lrow">
+            <span class="lid l3c">L3</span>
+            <div class="ltext">Claudeへのオリエン投げ方とFireflyの組み合わせ。急ぎ案件の初稿対応に使えるフローとして再現性がある。詳しいプロンプトはnoteで公開予定。</div>
+          </div>
+        </div>
+        <div class="p-body">昨日、代理店から夕方5時に
+「明日の朝イチで3パターンほしい」って連絡。
+
+以前の自分なら確実に徹夜だった。
+
+Claudeにオリエン投げて構成案を5つ出させて、
+Fireflyでビジュアル作って、
+2時間で3パターン完成した。
+
+ソルジャーの無茶振り、
+AIが吸収してくれるようになってきた。
+
+感謝はしてないけど。笑</div>
+        <div class="p-actions">
+          <button class="pa pa-ok" onclick="approvePost('post3')">OK</button>
+          <button class="pa pa-ng" onclick="rejectPost('post3')">NG</button>
+          <button class="pa pa-ed">✎</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DATA -->
+  <div class="panel" id="panel-stats">
+    <div class="panel-head">
+      <span class="panel-title">DATA</span>
+      <span class="panel-label">数字・分析</span>
+    </div>
+    <div class="panel-body">
+
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-lbl">FOLLOWERS</div>
+          <div class="stat-num">1,847</div>
+          <div class="stat-d up">↑ +34</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">SAVE RATE</div>
+          <div class="stat-num">0.8%</div>
+          <div class="stat-d up">↑ +0.2%</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">IMPRESSIONS</div>
+          <div class="stat-num">12.4k</div>
+          <div class="stat-d up">↑ +18%</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">ENG RATE</div>
+          <div class="stat-num">3.2%</div>
+          <div class="stat-d dn">↓ −0.1%</div>
+        </div>
+      </div>
+
+      <div class="mvp">
+        <div class="mvp-text">「Runway Gen-4、仮編集で触ってみた。カメラマンに見せたら『どこで撮ったんですか？』って言われた。笑」</div>
+        <div class="mvp-row">
+          <span class="mvp-stat">❤ <em>486</em></span>
+          <span class="mvp-stat">🔖 <em>124</em></span>
+          <span class="mvp-stat">↻ <em>38</em></span>
+        </div>
+      </div>
+
+      <div class="s-div">
+        <span class="s-div-label">ANALYST</span>
+        <span class="s-div-line"></span>
+      </div>
+
+      <div class="arow">
+        <div class="adot ad-g"></div>
+        <div class="atxt"><strong>型③×両論構造</strong>の保存率が今週1.8倍。比率を上げる価値あり。</div>
+      </div>
+      <div class="arow">
+        <div class="adot ad-g"></div>
+        <div class="atxt"><strong>L1ソース付き投稿</strong>のフォロー率が先週比+0.3%向上。</div>
+      </div>
+      <div class="arow">
+        <div class="adot ad-a"></div>
+        <div class="atxt"><strong>著作権×クライアントシーン</strong>が保存率最高。今日も1本入れて。</div>
+      </div>
+      <div class="arow">
+        <div class="adot ad-b"></div>
+        <div class="atxt">意外層：<strong>エンジニア系</strong>からの引用が増加。クリエイター×エンジニアの話を1本試す価値あり。</div>
+      </div>
+      <div class="arow">
+        <div class="adot ad-r"></div>
+        <div class="atxt">ツール比較系が3日連続でエンゲージ低下。<strong>今週は避けて。</strong></div>
+      </div>
+
+      <div class="s-div">
+        <span class="s-div-label">PERSONAS</span>
+        <span class="s-div-line"></span>
+      </div>
+
+      <div class="persona">
+        <div class="persona-head">
+          <span class="p-rank pr-core">CORE</span>
+          <span class="p-name">制作現場でAI使いたいが迷ってるクリエイター</span>
+        </div>
+        <div class="persona-body">
+          <div class="p-desc">WEB・映像系・会社員orフリーランス。著作権・クライアント説明で手が止まることがある。</div>
+          <div class="chips">
+            <span class="chip">著作権系を保存</span>
+            <span class="chip">代理店話に共感</span>
+            <span class="chip">「自分も同じ」返信</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="persona">
+        <div class="persona-head">
+          <span class="p-rank pr-grow">GROW</span>
+          <span class="p-name">AI活用を始めたい会社員クリエイター</span>
+        </div>
+        <div class="persona-body">
+          <div class="p-desc">まだ本格的に使えていない。社内への説明に不安あり。検索でたどり着いた層。</div>
+          <div class="chips">
+            <span class="chip">ツール系を保存</span>
+            <span class="chip">「やってみます」返信</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="persona">
+        <div class="persona-head">
+          <span class="p-rank pr-wild">WILD</span>
+          <span class="p-name">エンジニア・マーケター（想定外の層）</span>
+        </div>
+        <div class="persona-body">
+          <div class="p-desc">クリエイターではないが連携でAIに関心。引用でフォロワーに紹介してくれる。先週から増加中。</div>
+          <div class="chips">
+            <span class="chip">補足系の返信</span>
+            <span class="chip">引用シェア</span>
+            <span class="chip">↑ 先週比+40%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-wrap">
+        <div class="chart-head">
+          <span class="chart-lbl">FOLLOWER / 7D</span>
+          <span class="chart-val">+47</span>
+        </div>
+        <div class="bars">
+          <div class="bar" style="height:38%"></div>
+          <div class="bar" style="height:52%"></div>
+          <div class="bar" style="height:44%"></div>
+          <div class="bar" style="height:68%"></div>
+          <div class="bar" style="height:58%"></div>
+          <div class="bar" style="height:82%"></div>
+          <div class="bar today" style="height:100%"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bnav">
+  <div class="bt active" id="bt-intel" onclick="sw('intel')">
+    <span class="bt-icon">IN</span>
+    <span class="bt-label">Input</span>
+  </div>
+  <div class="bt" id="bt-queue" onclick="sw('queue')">
+    <span class="bt-icon">QU</span>
+    <span class="bt-badge" id="bt-badge">3</span>
+    <span class="bt-label">Queue</span>
+  </div>
+  <div class="bt" id="bt-stats" onclick="sw('stats')">
+    <span class="bt-icon">DA</span>
+    <span class="bt-label">Data</span>
+  </div>
+</nav>
+
+<script>
+function sw(name) {
+  ['intel','queue','stats'].forEach(n => {
+    document.getElementById('panel-' + n).classList.toggle('active', n === name);
+    document.getElementById('bt-' + n).classList.toggle('active', n === name);
+  });
+}
+
+function toggleLayer(el) {
+  const body = el.nextElementSibling;
+  const ch = el.querySelector('.chevron');
+  body.classList.toggle('open');
+  ch.classList.toggle('open');
+}
+
+let remaining = 3;
+
+function approvePost(id) {
+  const c = document.getElementById(id);
+  c.classList.add('approved');
+  c.querySelector('.pa-ok').textContent = '✓ 承認';
+  remaining = Math.max(0, remaining - 1);
+  updateCount();
+}
+
+function rejectPost(id) {
+  const c = document.getElementById(id);
+  c.classList.add('rejected');
+  c.querySelector('.pa-ng').textContent = '✕ 却下';
+  remaining = Math.max(0, remaining - 1);
+  updateCount();
+}
+
+function updateCount() {
+  document.getElementById('q-count').textContent = remaining;
+  document.getElementById('bt-badge').textContent = remaining;
+  document.getElementById('h-badge').textContent = remaining;
+}
+
+function useIntel(btn) {
+  btn.textContent = '✓ キューに追加';
+  btn.style.color = 'var(--green)';
+  btn.style.borderColor = 'rgba(200,240,74,0.5)';
+  btn.style.background = 'rgba(200,240,74,0.08)';
+  btn.disabled = true;
+}
+</script>
+</body>
+</html>
