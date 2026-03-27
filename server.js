@@ -8,6 +8,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const poster = require('./agents/poster');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -256,6 +257,59 @@ app.get('/api/metrics', (req, res) => {
     personas: latestPersona,
     follower_trend: followerTrend,
   });
+});
+
+/**
+ * GET /api/queue/all
+ * 承認済み・投稿済み・失敗済みの投稿一覧（承認済みタブ用）
+ */
+app.get('/api/queue/all', (req, res) => {
+  const today = getToday();
+  const queueFile = path.join(DATA_DIR, 'queue', `${today}.json`);
+  const queue = readJSON(queueFile);
+
+  const done = queue
+    .filter(p => ['approved', 'posted', 'failed', 'rejected'].includes(p.status))
+    .sort((a, b) => {
+      const ta = new Date(b.approved_at || b.created_at || 0);
+      const tb = new Date(a.approved_at || a.created_at || 0);
+      return ta - tb;
+    });
+
+  res.json(done);
+});
+
+/**
+ * DELETE /api/queue/:id
+ * 投稿をキューから削除
+ */
+app.delete('/api/queue/:id', (req, res) => {
+  const today = getToday();
+  const queueFile = path.join(DATA_DIR, 'queue', `${today}.json`);
+  const queue = readJSON(queueFile);
+
+  const filtered = queue.filter(p => p.id !== req.params.id);
+  if (filtered.length === queue.length) {
+    return res.status(404).json({ error: '投稿が見つかりません' });
+  }
+
+  writeJSON(queueFile, filtered);
+  console.log(`[Server] 削除: ${req.params.id}`);
+  res.json({ success: true });
+});
+
+/**
+ * POST /api/post-now/:id
+ * 今すぐ投稿（時間帯スロット無視）
+ */
+app.post('/api/post-now/:id', async (req, res) => {
+  try {
+    const result = await poster.postSingle(req.params.id);
+    res.json(result);
+  } catch (e) {
+    console.error('[Server] 即時投稿エラー:', e.message);
+    res.status(500).json({ success: false, error: e.message });
+  }
 });
 
 /**

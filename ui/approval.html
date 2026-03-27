@@ -779,6 +779,64 @@ header {
 @media (max-width: 999px) {
   .layout { padding-bottom: 72px; }
 }
+
+/* ── QUEUE TABS ── */
+.q-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+.q-tab {
+  flex: 1;
+  padding: 10px 16px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--white3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  text-align: center;
+  transition: color 0.15s, border-color 0.15s;
+}
+.q-tab:hover { color: var(--white2); }
+.q-tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+.q-panel { display: none; }
+.q-panel.active { display: block; animation: rise 0.2s ease both; }
+
+/* ── STATUS BADGE ── */
+.st-badge {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 100px;
+  border: 1px solid;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+.st-approved { color: var(--green); border-color: rgba(200,240,74,0.35); background: rgba(200,240,74,0.04); }
+.st-posted { color: var(--white2); border-color: var(--border2); background: rgba(245,242,237,0.03); }
+.st-pending { color: var(--amber); border-color: rgba(240,150,10,0.35); background: rgba(240,150,10,0.04); }
+.st-failed { color: var(--red); border-color: rgba(255,60,60,0.35); background: rgba(255,60,60,0.04); }
+
+/* ── APPROVED CARD ACTIONS ── */
+.pa-del { color: var(--red); font-size: 14px; font-family: var(--sans); }
+.pa-del:hover { background: rgba(255,60,60,0.07); }
+.pa-now { color: var(--amber); font-size: 10px; font-family: var(--mono); letter-spacing: 0.04em; }
+.pa-now:hover { background: rgba(240,150,10,0.07); }
+.pa-now:disabled { opacity: 0.35; cursor: default; background: transparent; }
+.p-posted-url {
+  padding: 6px 14px;
+  border-top: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--white3);
+  letter-spacing: 0.04em;
+}
+.p-posted-url a { color: var(--blue); text-decoration: none; }
+.p-posted-url a:hover { color: var(--white); }
 </style>
 </head>
 <body>
@@ -809,9 +867,18 @@ header {
     <div class="panel-head">
       <span class="panel-title">QUEUE</span>
       <span class="panel-label">承認キュー</span>
-      <span class="panel-count" id="q-count">3</span>
+      <span class="panel-count" id="q-count">0</span>
     </div>
-    <div class="panel-body" id="queue-body"></div>
+    <div class="q-tabs">
+      <div class="q-tab active" id="qtab-pending" onclick="switchQTab('pending')">未承認</div>
+      <div class="q-tab" id="qtab-approved" onclick="switchQTab('approved')">承認済み</div>
+    </div>
+    <div class="q-panel active" id="qpanel-pending">
+      <div class="panel-body" id="queue-body-pending"></div>
+    </div>
+    <div class="q-panel" id="qpanel-approved">
+      <div class="panel-body" id="queue-body-approved"></div>
+    </div>
   </div>
 
   <!-- DATA -->
@@ -891,6 +958,10 @@ async function approvePost(postId) {
     el.classList.add('approved');
     el.querySelector('.pa-ok').textContent = '✓ 承認';
     updateCount();
+    // 承認済みタブが開いていれば即時更新
+    if (document.getElementById('qpanel-approved').classList.contains('active')) {
+      loadApproved();
+    }
   } catch (e) {
     console.error('approve failed', e);
   }
@@ -973,7 +1044,7 @@ function renderIntel(data) {
   const body = document.getElementById('intel-body');
   const items = [...(data.featured || []), ...(data.caution || [])];
   if (items.length === 0) {
-    body.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:32px;text-align:center;">今日のインプットはまだありません</div>';
+    body.innerHTML = '<div style="color:var(--white3);font-size:12px;padding:32px;text-align:center;">今日のインプットはまだありません</div>';
     return;
   }
   body.innerHTML = items.map(item => {
@@ -1007,63 +1078,78 @@ function renderIntel(data) {
   }).join('');
 }
 
-// ---- Queue パネル描画 ----
+// ---- タブ切替 ----
+function switchQTab(tab) {
+  ['pending','approved'].forEach(t => {
+    document.getElementById('qtab-' + t).classList.toggle('active', t === tab);
+    document.getElementById('qpanel-' + t).classList.toggle('active', t === tab);
+  });
+  if (tab === 'approved') loadApproved();
+}
+
+// ---- 時刻フォーマット ----
+function fmtTime(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+}
+
+// ---- 投稿カード共通HTML生成 ----
+function buildPostCard(post, pid) {
+  const platformClass = post.platform === 'X' ? 'px' : 'pt';
+  const platformLabel = post.platform === 'X' ? 'X' : 'THREADS';
+  const trust = post.source_item && post.source_item.trust;
+  const trustClass = trust === 'HIGH' ? 'tr-h' : 'tr-m';
+  const trustLabel = trust || 'MID';
+  const srcName = (post.source_item && post.source_item.source_name) || '—';
+  const srcUrl = (post.source_item && post.source_item.source_url) || '';
+  const srcLink = srcUrl ? ' <a class="src-link" href="' + escAttr(srcUrl) + '" target="_blank">↗</a>' : '';
+  const postTypeNum = post.post_type || '';
+  const priorityTypes = ['型⑤','型⑥','型⑦'];
+  const alertTypes = ['型③','型④'];
+  const typeTagClass = priorityTypes.includes(postTypeNum) ? 't-g' : alertTypes.includes(postTypeNum) ? 't-r' : 't-b';
+  const postTypeTag = postTypeNum ? '<span class="tag ' + typeTagClass + '">' + escHtml(postTypeNum) + '</span>' : '';
+  const themeTag = (post.source_item && post.source_item.theme_tag)
+    ? '<span class="tag t-w">' + escHtml(post.source_item.theme_tag) + '</span>' : '';
+  const charTag = post.character_tag ? '<span class="tag t-w">' + escHtml(post.character_tag) + '</span>' : '';
+  const threadTag = post.thread_role ? '<span class="tag t-a">' + escHtml(post.thread_role) + '</span>' : '';
+  const score = post.quality_score != null ? Number(post.quality_score).toFixed(1) : '—';
+  const l1 = post.layer1 || (post.source_item && post.source_item.summary_ja) || '—';
+  const l2 = post.layer2 || '—';
+  const l3 = post.layer3 || '—';
+  return { platformClass, platformLabel, trustClass, trustLabel, srcName, srcLink,
+           postTypeTag, themeTag, charTag, threadTag, score, l1, l2, l3 };
+}
+
+// ---- Queue パネル描画（未承認タブ）----
 function renderQueue(posts) {
-  const body = document.getElementById('queue-body');
+  const body = document.getElementById('queue-body-pending');
   if (posts.length === 0) {
-    body.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:32px;text-align:center;">承認待ちの投稿はありません</div>';
+    body.innerHTML = '<div style="color:var(--white3);font-size:12px;padding:32px;text-align:center;">承認待ちの投稿はありません</div>';
     updateCount(0);
     return;
   }
   updateCount(posts.length);
   body.innerHTML = posts.map(post => {
-    const platformClass = post.platform === 'X' ? 'px' : 'pt';
-    const platformLabel = post.platform === 'X' ? 'X' : 'THREADS';
-    const trust = post.source_item && post.source_item.trust;
-    const trustClass = trust === 'HIGH' ? 'tr-h' : 'tr-m';
-    const trustLabel = trust || 'MID';
-    const srcName = (post.source_item && post.source_item.source_name) || '—';
-    const srcUrl = (post.source_item && post.source_item.source_url) || '';
-    const srcLink = srcUrl ? ' <a class="src-link" href="' + escAttr(srcUrl) + '" target="_blank">↗</a>' : '';
-    // Tags
-    const postTypeNum = post.post_type || '';
-    const priorityTypes = ['型⑤','型⑥','型⑦'];
-    const alertTypes = ['型③','型④'];
-    const typeTagClass = priorityTypes.includes(postTypeNum) ? 't-g'
-      : alertTypes.includes(postTypeNum) ? 't-r' : 't-b';
-    const postTypeTag = postTypeNum ? '<span class="tag ' + typeTagClass + '">' + escHtml(postTypeNum) + '</span>' : '';
-    const themeTag = (post.source_item && post.source_item.theme_tag)
-      ? '<span class="tag t-w">' + escHtml(post.source_item.theme_tag) + '</span>' : '';
-    const charTag = post.character_tag
-      ? '<span class="tag t-w">' + escHtml(post.character_tag) + '</span>' : '';
-    const threadTag = post.thread_role
-      ? '<span class="tag t-a">' + escHtml(post.thread_role) + '</span>' : '';
-    const score = post.quality_score != null ? Number(post.quality_score).toFixed(1) : '—';
-    const l1 = post.layer1 || (post.source_item && post.source_item.summary_ja) || '—';
-    const l2 = post.layer2 || '—';
-    const l3 = post.layer3 || '—';
-    const postText = post.post_text || '';
     const pid = escAttr(post.id);
+    const c = buildPostCard(post, pid);
     return '<div class="post" id="post-' + pid + '">'
       + '<div class="p-head">'
-      + '<span class="platform ' + platformClass + '">' + platformLabel + '</span>'
-      + '<div class="tags">' + postTypeTag + themeTag + charTag + threadTag + '</div>'
-      + '<span class="score">' + score + '</span>'
+      + '<span class="platform ' + c.platformClass + '">' + c.platformLabel + '</span>'
+      + '<div class="tags">' + c.postTypeTag + c.themeTag + c.charTag + c.threadTag + '</div>'
+      + '<span class="score">' + c.score + '</span>'
       + '</div>'
-      + '<div class="p-src">'
-      + '<span class="src-label">SRC</span>'
-      + '<div class="src-item">' + escHtml(srcName) + ' <span class="trust ' + trustClass + '">' + trustLabel + '</span>' + srcLink + '</div>'
+      + '<div class="p-src"><span class="src-label">SRC</span>'
+      + '<div class="src-item">' + escHtml(c.srcName) + ' <span class="trust ' + c.trustClass + '">' + c.trustLabel + '</span>' + c.srcLink + '</div>'
       + '</div>'
       + '<div class="p-layer-toggle" onclick="toggleLayer(this)">'
-      + '<span class="layer-label">3層構造を展開</span>'
-      + '<span class="chevron">▼</span>'
-      + '</div>'
+      + '<span class="layer-label">3層構造を展開</span><span class="chevron">▼</span></div>'
       + '<div class="layers">'
-      + '<div class="lrow"><span class="lid l1c">L1</span><div class="ltext">' + escHtml(l1) + '</div></div>'
-      + '<div class="lrow"><span class="lid l2c">L2</span><div class="ltext">' + escHtml(l2) + '</div></div>'
-      + '<div class="lrow"><span class="lid l3c">L3</span><div class="ltext">' + escHtml(l3) + '</div></div>'
+      + '<div class="lrow"><span class="lid l1c">L1</span><div class="ltext">' + escHtml(c.l1) + '</div></div>'
+      + '<div class="lrow"><span class="lid l2c">L2</span><div class="ltext">' + escHtml(c.l2) + '</div></div>'
+      + '<div class="lrow"><span class="lid l3c">L3</span><div class="ltext">' + escHtml(c.l3) + '</div></div>'
       + '</div>'
-      + '<div class="p-body">' + escHtml(postText) + '</div>'
+      + '<div class="p-body">' + escHtml(post.post_text || '') + '</div>'
       + '<div class="p-actions">'
       + '<button class="pa pa-ok" onclick="approvePost(\'' + pid + '\')">OK</button>'
       + '<button class="pa pa-ng" onclick="rejectPost(\'' + pid + '\')">NG</button>'
@@ -1071,6 +1157,156 @@ function renderQueue(posts) {
       + '</div>'
       + '</div>';
   }).join('');
+}
+
+// ---- 承認済みパネル描画 ----
+function renderApproved(posts) {
+  const body = document.getElementById('queue-body-approved');
+  if (posts.length === 0) {
+    body.innerHTML = '<div style="color:var(--white3);font-size:12px;padding:32px;text-align:center;">承認済みの投稿はありません</div>';
+    return;
+  }
+  const statusMap = {
+    approved: ['st-approved','承認済み'],
+    posted:   ['st-posted','投稿済み'],
+    failed:   ['st-failed','失敗'],
+    rejected: ['st-failed','却下'],
+  };
+  body.innerHTML = posts.map(post => {
+    const pid = escAttr(post.id);
+    const c = buildPostCard(post, pid);
+    const [stClass, stLabel] = statusMap[post.status] || ['st-pending','待機中'];
+    const timeAt = post.posted_at || post.approved_at || post.created_at;
+    const timeStr = fmtTime(timeAt);
+    const timeLabel = post.posted_at ? '投稿 ' + timeStr : '承認 ' + timeStr;
+    const isPosted = post.status === 'posted';
+    const isFailed = post.status === 'failed';
+
+    // URL表示（投稿済みのみ）
+    const urlRow = (isPosted && post.platform_url)
+      ? '<div class="p-posted-url">↗ <a href="' + escAttr(post.platform_url) + '" target="_blank">' + escHtml(post.platform_url) + '</a></div>'
+      : '';
+
+    // アクションボタン
+    let actions;
+    if (isPosted) {
+      actions = '<button class="pa pa-ed" onclick="editApproved(\'' + pid + '\')" style="border-right:1px solid var(--border)">✎ 編集</button>'
+        + '<button class="pa pa-del" onclick="deletePost(\'' + pid + '\')">✕ 削除</button>'
+        + '<button class="pa pa-now" disabled>✓ 投稿済み</button>';
+    } else if (isFailed) {
+      actions = '<button class="pa pa-ed" onclick="editApproved(\'' + pid + '\')" style="border-right:1px solid var(--border)">✎ 編集</button>'
+        + '<button class="pa pa-del" onclick="deletePost(\'' + pid + '\')">✕ 削除</button>'
+        + '<button class="pa pa-now" id="now-' + pid + '" onclick="postNow(\'' + pid + '\')">↺ 再投稿</button>';
+    } else {
+      actions = '<button class="pa pa-ed" onclick="editApproved(\'' + pid + '\')" style="border-right:1px solid var(--border)">✎ 編集</button>'
+        + '<button class="pa pa-del" onclick="deletePost(\'' + pid + '\')">✕ 削除</button>'
+        + '<button class="pa pa-now" id="now-' + pid + '" onclick="postNow(\'' + pid + '\')">▶ 今すぐ</button>';
+    }
+
+    return '<div class="post" id="apr-' + pid + '" style="opacity:1">'
+      + '<div class="p-head">'
+      + '<span class="platform ' + c.platformClass + '">' + c.platformLabel + '</span>'
+      + '<span class="st-badge ' + stClass + '">' + stLabel + '</span>'
+      + '<div class="tags" style="flex:1;margin-left:4px">' + c.postTypeTag + c.themeTag + '</div>'
+      + '<span style="font-family:var(--mono);font-size:9px;color:var(--white3);white-space:nowrap">' + timeLabel + '</span>'
+      + '</div>'
+      + '<div class="p-body" id="aprbody-' + pid + '">' + escHtml(post.post_text || '') + '</div>'
+      + urlRow
+      + '<div class="p-actions" style="grid-template-columns:1fr 1fr 1fr">'
+      + actions
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+// ---- 承認済みタブ 読み込み ----
+async function loadApproved() {
+  const body = document.getElementById('queue-body-approved');
+  body.innerHTML = '<div style="color:var(--white3);font-size:12px;padding:24px;text-align:center;">読み込み中...</div>';
+  try {
+    const res = await fetch('/api/queue/all');
+    const data = await res.json();
+    renderApproved(data);
+  } catch (e) {
+    body.innerHTML = '<div style="color:var(--red);font-size:12px;padding:24px;text-align:center;">読み込み失敗</div>';
+  }
+}
+
+// ---- 承認済みカードの編集 ----
+function editApproved(postId) {
+  const el = document.getElementById('apr-' + postId);
+  if (!el) return;
+  const bodyEl = el.querySelector('.p-body');
+  const actEl = el.querySelector('.p-actions');
+  const origText = bodyEl.textContent;
+  bodyEl.innerHTML = '<textarea id="edit-ta2-' + escAttr(postId) + '" style="width:100%;min-height:120px;background:var(--bg2);color:var(--white);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:13px;line-height:1.6;resize:vertical;box-sizing:border-box;">' + escHtml(origText) + '</textarea>';
+  actEl.innerHTML = '<button class="pa pa-ok" style="grid-column:span 2;border-right:1px solid var(--border)" onclick="saveEditApproved(\'' + escAttr(postId) + '\')">保存</button>'
+    + '<button class="pa pa-ed" onclick="cancelEditApproved(\'' + escAttr(postId) + '\',\'' + escAttr(origText) + '\')">キャンセル</button>';
+  actEl.style.gridTemplateColumns = '1fr 80px';
+}
+
+async function saveEditApproved(postId) {
+  const ta = document.getElementById('edit-ta2-' + postId);
+  if (!ta) return;
+  const newText = ta.value.trim();
+  if (!newText) return;
+  try {
+    const res = await fetch('/api/edit/' + encodeURIComponent(postId), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ post_text: newText }),
+    });
+    if (!res.ok) throw new Error('API error');
+    await loadApproved();
+  } catch (e) {
+    alert('保存失敗: ' + e.message);
+  }
+}
+
+function cancelEditApproved(postId, origText) {
+  const el = document.getElementById('apr-' + postId);
+  if (!el) return;
+  el.querySelector('.p-body').textContent = origText;
+  el.querySelector('.p-actions').style.gridTemplateColumns = '1fr 1fr 1fr';
+  loadApproved();
+}
+
+// ---- 削除 ----
+async function deletePost(postId) {
+  if (!confirm('この投稿を削除しますか？')) return;
+  try {
+    const res = await fetch('/api/queue/' + encodeURIComponent(postId), { method: 'DELETE' });
+    if (!res.ok) throw new Error('API error');
+    // カードをフェードアウト
+    const el = document.getElementById('apr-' + postId);
+    if (el) { el.style.transition = 'opacity 0.25s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 250); }
+    // 未承認タブにある場合も削除
+    const pel = document.getElementById('post-' + postId);
+    if (pel) { pel.style.transition = 'opacity 0.25s'; pel.style.opacity = '0'; setTimeout(() => pel.remove(), 250); }
+    updateCount();
+  } catch (e) {
+    alert('削除失敗: ' + e.message);
+  }
+}
+
+// ---- 今すぐ投稿 ----
+async function postNow(postId) {
+  const btn = document.getElementById('now-' + postId);
+  if (btn) { btn.disabled = true; btn.textContent = '投稿中...'; }
+  try {
+    const res = await fetch('/api/post-now/' + encodeURIComponent(postId), { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      // 承認済みタブを再描画
+      await loadApproved();
+    } else {
+      if (btn) { btn.disabled = false; btn.textContent = '↺ 再試行'; }
+      alert('投稿失敗: ' + (data.error || '不明なエラー'));
+    }
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = '↺ 再試行'; }
+    alert('投稿失敗: ' + e.message);
+  }
 }
 
 // ---- Stats パネル描画 ----
@@ -1132,7 +1368,7 @@ function renderStats(data) {
   }
 
   if (!data.mvp_post && analystRows.length === 0 && personasData.length === 0) {
-    html += '<div style="color:var(--muted);font-size:12px;padding:32px;text-align:center;">データがまだありません</div>';
+    html += '<div style="color:var(--white3);font-size:12px;padding:32px;text-align:center;">データがまだありません</div>';
   }
 
   body.innerHTML = html;

@@ -351,10 +351,40 @@ async function main(testMode = false, forceMode = false) {
   console.log(`[Poster] 完了 - X:${postedX}本 / Threads:${postedThreads}本 投稿済み`);
 }
 
+/**
+ * 単一投稿を即時投稿（承認UI「今すぐ投稿」用）
+ */
+async function postSingle(postId) {
+  const today = new Date().toISOString().split('T')[0];
+  const queueFile = path.join(QUEUE_DIR, `${today}.json`);
+  if (!fs.existsSync(queueFile)) {
+    return { success: false, error: 'キューファイルが見つかりません' };
+  }
+
+  const queue = JSON.parse(fs.readFileSync(queueFile, 'utf-8'));
+  const post = queue.find(p => p.id === postId);
+  if (!post) return { success: false, error: '投稿が見つかりません' };
+  if (post.platform !== 'X') return { success: false, error: 'Threads即時投稿は未対応' };
+
+  console.log(`[Poster] 即時投稿: ${post.post_text.slice(0, 40)}...`);
+  const result = await postToX(post.post_text);
+
+  if (result.success) {
+    updateQueueStatus(postId, 'posted', result);
+    logPost(post, result);
+    console.log(`[Poster] 即時投稿成功: ${result.url}`);
+  } else {
+    updateQueueStatus(postId, 'failed');
+    console.error(`[Poster] 即時投稿失敗: ${result.error}`);
+  }
+
+  return result;
+}
+
 if (require.main === module) {
   const testMode = process.argv.includes('--test');
   const forceMode = process.argv.includes('--force');
   main(testMode, forceMode).catch(console.error);
 }
 
-module.exports = { main };
+module.exports = { main, postSingle };
