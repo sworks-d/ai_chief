@@ -1,0 +1,24 @@
+{
+  "name": "ai-news",
+  "version": "1.0.0",
+  "description": "AIエージェントSNS自動発信システム",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "server": "node server.js",
+    "test:researcher": "node agents/researcher.js --test",
+    "test:fact_checker": "node agents/fact_checker.js --test",
+    "test:writer": "node agents/writer.js --test",
+    "test:poster": "node agents/poster.js --test",
+    "test:fetcher": "node agents/fetcher.js --test",
+    "test:analyst": "node agents/analyst.js --test"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.0",
+    "express": "^4.18.0",
+    "node-cron": "^3.0.3",
+    "twitter-api-v2": "^1.17.0"
+  }
+}
