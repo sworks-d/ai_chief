@@ -206,6 +206,59 @@ writer.js：
 
 ---
 
+### A-8b PEOPLEパネル「投稿を分析」機能の実装
+
+doc/12_people_feedback.mdの「投稿を分析」の詳細仕様に従って実装する。
+これはライターだけでなく全エージェントへのFBの起点となる最重要機能。
+
+```
+処理フロー：
+
+1. PEOPLEパネルの各カードで「投稿を分析」ボタンをクリック
+
+2. X APIでそのアカウントの直近投稿を20件取得する
+   GET /2/users/:id/tweets
+   パラメータ：max_results=20, tweet.fields=public_metrics,created_at
+   ※ Free Tier制限でエラーの場合はスキップしてSに通知する
+
+3. POST /api/people/analyze を叩いてanalyst.jsに分析を依頼する
+   analyst.jsがClaudeに以下を分析させる（Sonnetモデル使用）：
+
+   分析内容：
+   ① 1行目の構造パターン（疑問形・数字・体験談・断言のどれが多いか）
+   ② 投稿の型の傾向（比較・正直・tips・問いかけ・体験談）
+   ③ 頻出キーワード・フレーズ・特徴的な語尾
+   ④ いいねが多い投稿と少ない投稿の差（何が違うか）
+   ⑤ Sのジャンル（AI×クリエイター・制作現場）に置き換えた投稿例を1本生成
+
+4. 分析結果をdata/people_insights.jsonに保存する
+   フォーマット：doc/12_people_feedback.mdの「data/people_insights.jsonのフォーマット」参照
+
+5. UIに分析結果を表示する
+   カードを展開して以下を表示：
+   - バズパターンのサマリー（1行）
+   - よく使う型・頻出キーワード
+   - Sのジャンルで生成した投稿例
+
+6. 「この分析を全エージェントに反映する」ボタンを表示
+   クリックするとdata/people_insights.jsonを保存・全エージェントが次回から参照する
+```
+
+APIエンドポイント：
+```
+POST /api/people/analyze
+body: { account: "@handle", tweets: [...取得した投稿データ] }
+→ analyst.jsが分析してdata/people_insights.jsonに追記して返す
+```
+
+- [ ] 「投稿を分析」ボタンがPEOPLEパネルの各カードに存在している
+- [ ] X APIで対象アカウントの直近投稿を取得できる（Free Tier制限時はスキップ）
+- [ ] analyst.jsがバズ投稿を分析してdata/people_insights.jsonに保存する
+- [ ] 分析結果がUIのカード内に表示される
+- [ ] 「全エージェントに反映」ボタンで全エージェントが次回から参照する
+
+---
+
 ### A-9 fetcher.js：Free Tier制限対応
 
 メトリクス取得がエラーになった場合はスキップしてログに記録するだけ。
