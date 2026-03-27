@@ -18,11 +18,53 @@ noteへの誘導でマネタイズする。
 |---|---|
 | doc/01_setup.md | 環境構築手順・フォルダ構成 |
 | doc/02_system_design.md | システム全体設計・フロー |
-| doc/03_knowledge.md | キャラクター・ターゲット・投稿の型（最重要） |
+| doc/03_knowledge.md | キャラクター・ターゲット・投稿の型（初期定義） |
 | doc/04_agents.md | 各エージェントの詳細仕様 |
 | doc/05_ui.md | 承認UIの仕様 |
 | doc/06_scene_map.md | 関係者・シーンマップ |
 | doc/07_model_cost.md | モデル割り振り・コスト最適化設計（必読） |
+| doc/08_feedback_log.md | アナリストが自動追記するフィードバックログ |
+| doc/09_tuning_history.md | Sが月1回更新するチューニング履歴 |
+| doc/10_active_rules.md | 現在有効なルール最新版（最優先で参照） |
+
+---
+
+## ルールの優先順位
+
+```
+doc/10_active_rules.md（最優先）
+        ↓
+doc/03_knowledge.md（初期定義・ベース）
+
+10_active_rulesに記載がある項目は必ずそちらを優先する。
+記載がない項目はdoc/03_knowledge.mdに従う。
+```
+
+---
+
+## チューニングループ（コストゼロで継続改善）
+
+```
+毎日自動：エージェントが動いてデータを蓄積
+        ↓
+毎週自動：アナリストがdoc/08_feedback_log.mdに追記
+        ↓
+月1回・10分だけS：
+  1. 承認UIの週次サマリーを読む
+  2. doc/08_feedback_log.mdの提案を確認
+  3. doc/10_active_rules.mdを更新（現在のルール）
+  4. doc/09_tuning_history.mdに変更理由を記録
+  5. GitHubにpush
+        ↓
+Claude Codeが次回からdoc/10_active_rules.mdを読んで動く
+        ↓
+精度が上がる → また蓄積 → ループ
+```
+
+エージェントとして立てない理由：
+- mdファイルの更新はAPIコスト0で実現できる
+- 人間（S）の判断を入れることで精度が上がる
+- 自動で勝手にルールが変わると品質管理ができなくなる
 
 ---
 
@@ -32,8 +74,10 @@ noteへの誘導でマネタイズする。
 1. .envのAPIキーは絶対にコードに直書きしない
    → process.env.X_API_KEY のように環境変数から読む
 
-2. 全エージェントのモデルはclaude-sonnet-4-6を使用
-   → コスト管理のため。Opusは使わない
+2. モデルはdoc/07_model_cost.mdの設定に従う
+   → writer.jsとanalyst.jsはSonnet
+   → それ以外はHaiku
+   → Opusは使わない
 
 3. 全エージェントのログはdata/フォルダに記録
    → data/posts/・data/metrics/・data/personas/
@@ -47,6 +91,9 @@ noteへの誘導でマネタイズする。
 
 6. テスト方法
    → 各エージェントはダミーデータで単体テストできる設計にする
+
+7. アナリストはdoc/08_feedback_log.mdへの自動追記を実装する
+   → 毎週月曜の週次分析時にフォーマットに従って追記
 ```
 
 ---
