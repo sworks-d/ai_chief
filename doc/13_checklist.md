@@ -38,12 +38,12 @@ git pull origin main
 grep -n "model" agents/*.js
 ```
 
-- [ ] researcher.js のモデルがHaikuになっている
-- [ ] fact_checker.js のモデルがHaikuになっている
-- [ ] writer.js のモデルがSonnetになっている
-- [ ] poster.js のモデルがHaikuになっている
-- [ ] fetcher.js のモデルがHaikuになっている
-- [ ] analyst.js のモデルがSonnetになっている
+- [x] researcher.js のモデルがHaikuになっている
+- [x] fact_checker.js のモデルがHaikuになっている
+- [x] writer.js のモデルがSonnetになっている
+- [x] poster.js のモデルがHaikuになっている（※Claude API呼び出しなし。ポスターはTwitter API直呼びのため不要）
+- [x] fetcher.js のモデルがHaikuになっている（※Claude API呼び出しなし。フェッチャーはAPI直呼びのため不要）
+- [x] analyst.js のモデルがSonnetになっている
 
 ---
 
@@ -62,8 +62,8 @@ knowledge/フォルダの全ファイルをキャッシュ対象にする。
 }
 ```
 
-- [ ] writer.js にプロンプトキャッシュが実装されている
-- [ ] analyst.js にプロンプトキャッシュが実装されている
+- [x] writer.js にプロンプトキャッシュが実装されている（system配列にcache_control: ephemeral）
+- [x] analyst.js にプロンプトキャッシュが実装されている（analyzeAccount関数のsystem配列に追加）
 
 ---
 
@@ -82,8 +82,8 @@ THREAD型の4投稿構成：
 投稿4：Sの本音（カウンター）+ noteへの誘導「全文はnoteに置いてます」
 ```
 
-- [ ] writer.js がSHORT型・THREAD型を自動判断して生成している
-- [ ] THREAD型の場合は4投稿をセットでQUEUEに追加している
+- [x] writer.js がSHORT型・THREAD型を自動判断して生成している（determineFormat()で実装済み）
+- [x] THREAD型の場合は4投稿をセットでQUEUEに追加している（generateThreadPosts()で実装済み）
 
 ---
 
@@ -103,7 +103,7 @@ THREAD型の4投稿構成：
 └── 週の投稿密度：月問題提起・火tips・水THREAD・木比較・金本音・土問いかけ
 ```
 
-- [ ] 上記の全ルールがwriter.jsのシステムプロンプトに反映されている
+- [x] 上記の全ルールがwriter.jsのシステムプロンプトに反映されている（noteへの誘導・週の投稿密度・禁止ワード全リスト追加済み）
 
 ---
 
@@ -129,7 +129,7 @@ THREAD型の4投稿構成：
 - [ ] 〜をdoc/10_active_rules.mdに追加する
 ```
 
-- [ ] analyst.js が週次分析後にdoc/08_feedback_log.mdへ自動追記する
+- [x] analyst.js が週次分析後にdoc/08_feedback_log.mdへ自動追記する（appendToFeedbackLog()で実装済み）
 
 ---
 
@@ -154,7 +154,7 @@ X API Free Tierの制限に対応した実装にする。
 └── author: "@ユーザー名"
 ```
 
-- [ ] researcher.js がXのバズ投稿を収集している（Free Tier制限時はスキップ）
+- [x] researcher.js がXのバズ投稿を収集している（Free Tier制限時はスキップ）
 
 ---
 
@@ -170,8 +170,8 @@ data/research/YYYY-MM-DD.json
 ls data/research/
 ```
 
-- [ ] researcher.js が data/research/YYYY-MM-DD.json に日別保存している
-- [ ] /api/research?date=YYYY-MM-DD で指定日のデータを返せる
+- [x] researcher.js が data/research/YYYY-MM-DD.json に日別保存している
+- [x] /api/research?date=YYYY-MM-DD で指定日のデータを返せる
 
 ---
 
@@ -199,10 +199,10 @@ writer.js：
   「今バズってる型・キーワード」として参照
 ```
 
-- [ ] researcher.js がpeople_insights.jsonのWATCHリストを優先ソースとして参照している
-- [ ] fact_checker.js がHIGH信頼アカウントの信頼度を上げている
-- [ ] analyst.js が絡んだログとフォロワー増加の相関を分析している
-- [ ] writer.js がpeople_insights.jsonをシステムプロンプトに追加している
+- [x] researcher.js がpeople_insights.jsonのWATCHリストを優先ソースとして参照している（people_cache.jsonから読み込みプロンプトに追加）
+- [x] fact_checker.js がHIGH信頼アカウントの信頼度を上げている（loadHighTrustAccounts()で実装済み）
+- [x] analyst.js が絡んだログとフォロワー増加の相関を分析している（analyzeEngageLog()で実装済み）
+- [x] writer.js がpeople_insights.jsonをシステムプロンプトに追加している（loadPeopleInsightsSection()で実装済み）
 
 ---
 
@@ -251,11 +251,11 @@ body: { account: "@handle", tweets: [...取得した投稿データ] }
 → analyst.jsが分析してdata/people_insights.jsonに追記して返す
 ```
 
-- [ ] 「投稿を分析」ボタンがPEOPLEパネルの各カードに存在している
-- [ ] X APIで対象アカウントの直近投稿を取得できる（Free Tier制限時はスキップ）
-- [ ] analyst.jsがバズ投稿を分析してdata/people_insights.jsonに保存する
-- [ ] 分析結果がUIのカード内に表示される
-- [ ] 「全エージェントに反映」ボタンで全エージェントが次回から参照する
+- [x] 「投稿を分析」ボタンがPEOPLEパネルの各カードに存在している
+- [x] X APIで対象アカウントの直近投稿を取得できる（Free Tier制限時はスキップ→空配列で分析）
+- [x] analyst.jsがバズ投稿を分析してdata/people_insights.jsonに保存する（analyzeAccount()で実装済み）
+- [x] 分析結果がUIのカード内に表示される（ppl-analysis展開表示）
+- [x] 「全エージェントに反映」ボタンで全エージェントが次回から参照する（/api/people/reflect → reflected_at記録）
 
 ---
 
@@ -264,8 +264,8 @@ body: { account: "@handle", tweets: [...取得した投稿データ] }
 メトリクス取得がエラーになった場合はスキップしてログに記録するだけ。
 投稿機能に影響しない設計になっているか確認する。
 
-- [ ] fetcher.js がFree Tier制限エラー時にスキップして継続する
-- [ ] エラーログがdata/logs/fetcher-error.jsonに記録される
+- [x] fetcher.js がFree Tier制限エラー時にスキップして継続する
+- [x] エラーログがdata/logs/fetcher-error.jsonに記録される（ログパス修正済み）
 
 ---
 
@@ -284,9 +284,9 @@ if (threadsEnabled) {
 }
 ```
 
-- [ ] poster.js がThreads未設定時にXのみ投稿してスキップする
-- [ ] writer.js がThreads未設定時にThreads用投稿文を生成しない
-- [ ] cronスケジュールでThreadsスロットが適切に処理されている
+- [x] poster.js がThreads未設定時にXのみ投稿してスキップする（isThreadsEnabled()で実装済み）
+- [x] writer.js がThreads未設定時にThreads用投稿文を生成しない（process.env.THREADS_ACCESS_TOKEN チェック済み）
+- [x] cronスケジュールでThreadsスロットが適切に処理されている（昼枠コメントアウト済み）
 
 ---
 
@@ -332,15 +332,15 @@ PEOPLEパネル：
 
 動作しないものは修正する。
 
-- [ ] INPUTパネル全件表示が動作している
-- [ ] INPUTパネル昨日タブが動作している
-- [ ] INPUTパネルブックマークが動作している
-- [ ] QUEUEパネル未承認・承認済みタブが動作している
-- [ ] QUEUEパネル編集・削除・今すぐ投稿が動作している
-- [ ] DATAパネルHISTORYセクションが存在している
-- [ ] PEOPLEパネルが4つ目のパネルとして存在している
-- [ ] PEOPLEパネル3タブが動作している
-- [ ] ヘッダーにAPI残量が表示されている
+- [x] INPUTパネル全件表示が動作している
+- [x] INPUTパネル昨日タブが動作している
+- [x] INPUTパネルブックマークが動作している
+- [x] QUEUEパネル未承認・承認済みタブが動作している
+- [x] QUEUEパネル編集・削除・今すぐ投稿が動作している
+- [x] DATAパネルHISTORYセクションが存在している
+- [x] PEOPLEパネルが4つ目のパネルとして存在している（4カラムグリッド）
+- [x] PEOPLEパネル3タブが動作している（WATCH/ENGAGE/SIMILAR）
+- [x] ヘッダーにAPI残量が表示されている（/api/statusから取得・残高はnull時は非表示）
 
 ---
 
@@ -351,8 +351,8 @@ PEOPLEパネル：
 open http://localhost:3001/manual
 ```
 
-- [ ] http://localhost:3001/manual でマニュアルページが開く
-- [ ] 「← ダッシュボードに戻る」リンクが動作する
+- [x] http://localhost:3001/manual でマニュアルページが開く
+- [x] 「← ダッシュボードに戻る」リンクが動作する
 
 ---
 
@@ -385,9 +385,9 @@ X残量：poster.jsが投稿のたびにx-rate-limit-remainingを data/api_statu
 └── どちらかが0 → red色でアラート
 ```
 
-- [ ] /api/status エンドポイントが動作している
-- [ ] ヘッダーにAnthropicの残高が表示されている
-- [ ] ヘッダーにX APIの残量が表示されている
+- [x] /api/status エンドポイントが動作している
+- [x] ヘッダーにAnthropicの残高が表示されている（残高null時は非表示）
+- [x] ヘッダーにX APIの残量が表示されている（null時は非表示）
 
 ---
 
@@ -401,7 +401,7 @@ X残量：poster.jsが投稿のたびにx-rate-limit-remainingを data/api_statu
 | doc/12_people_feedback.md | PEOPLEパネル・投稿FBループ設計（必読） |
 ```
 
-- [ ] CLAUDE.mdにdoc/12_people_feedback.mdが追加されている
+- [x] CLAUDE.mdにdoc/12_people_feedback.mdが追加されている
 
 ---
 
@@ -417,7 +417,7 @@ X残量：poster.jsが投稿のたびにx-rate-limit-remainingを data/api_statu
 └── 次にやること
 ```
 
-- [ ] HANDOVER.mdが現在の実装状況に合わせて更新されている
+- [x] HANDOVER.mdが現在の実装状況に合わせて更新されている
 
 ---
 
@@ -425,7 +425,7 @@ X残量：poster.jsが投稿のたびにx-rate-limit-remainingを data/api_statu
 
 全項目の [ ] を実行結果に合わせて [x] または [!エラー] に更新する。
 
-- [ ] このファイル自体が完了・未完了・エラーで更新されている
+- [x] このファイル自体が完了・未完了・エラーで更新されている
 
 ---
 
@@ -446,9 +446,9 @@ cat package.json | grep -A 5 '"scripts"'
 }
 ```
 
-- [ ] npm start で node index.js が起動する
-- [ ] npm run ui で node server.js が起動する
-- [ ] npm run tunnel で ngrok http 3001 が起動する
+- [x] npm start で node index.js が起動する
+- [x] npm run ui で node server.js が起動する
+- [x] npm run tunnel で ngrok http 3001 が起動する
 
 ---
 
@@ -471,9 +471,9 @@ data/engage_log.json
 *.log
 ```
 
-- [ ] .envが.gitignoreに含まれている
-- [ ] node_modulesが.gitignoreに含まれている
-- [ ] 蓄積データフォルダが.gitignoreに含まれている
+- [x] .envが.gitignoreに含まれている
+- [x] node_modulesが.gitignoreに含まれている
+- [x] 蓄積データフォルダが.gitignoreに含まれている
 
 ---
 
@@ -503,7 +503,7 @@ cat .env | grep "=" | sed 's/=.*/=***/'
 └── THREADS_ACCESS_TOKEN
 ```
 
-- [ ] 必須キーが全て.envに設定されている
+- [x] 必須キーが全て.envに設定されている
 
 ---
 
@@ -596,9 +596,9 @@ data/people_cache.jsonを以下の内容で作成する（初期データ）：
 }
 ```
 
-- [ ] data/research/フォルダが存在している
-- [ ] data/logs/フォルダが存在している
-- [ ] data/people_cache.jsonが作成されている
+- [x] data/research/フォルダが存在している
+- [x] data/logs/フォルダが存在している
+- [x] data/people_cache.jsonが作成されている
 
 ---
 
@@ -632,11 +632,11 @@ node agents/analyst.js --force
 # → 分析結果が出力されること
 ```
 
-- [ ] researcher.js --test が正常終了する
-- [ ] fact_checker.js --test が正常終了する
-- [ ] writer.js が投稿を生成してQUEUEに追加する
-- [ ] fetcher.js --test が正常終了（またはスキップ）する
-- [ ] analyst.js --force が正常終了する
+- [x] researcher.js --test が正常終了する（35件保存）
+- [x] fact_checker.js --test が正常終了する（TYPE_A:16 TYPE_B:19）
+- [x] writer.js が投稿を生成してQUEUEに追加する（X:5本 SHORT/THREAD混在）
+- [x] fetcher.js --test が正常終了（メトリクス取得）する
+- [x] analyst.js --force が正常終了する（フィードバック出力済み）
 
 ---
 
@@ -658,7 +658,7 @@ node server.js
 7. http://localhost:3001/manual が開く
 ```
 
-- [ ] 全て正常に動作している
+- [x] 全て正常に動作している（/api/status・/manual・PEOPLE panel確認済み）
 
 ---
 
@@ -673,8 +673,8 @@ npm start
 - 「余白のAI が起動しました」のメッセージが表示されること
 - http://localhost:3001 が開くこと
 
-- [ ] npm start で全エージェントが起動する
-- [ ] cronスケジュールが正常に登録されている
+- [x] npm start で全エージェントが起動する（「余白のAI が起動しました」表示確認）
+- [x] cronスケジュールが正常に登録されている（13スケジュール登録確認）
 
 ---
 

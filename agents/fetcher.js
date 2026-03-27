@@ -12,16 +12,16 @@ const path = require('path');
 
 const POSTS_DIR = path.join(__dirname, '..', 'data', 'posts');
 const METRICS_DIR = path.join(__dirname, '..', 'data', 'metrics');
+const LOGS_DIR = path.join(__dirname, '..', 'data', 'logs');
 
 /**
  * エラーをログファイルに記録
  */
 function logError(platform, postId, errorCode, errorMessage) {
-  if (!fs.existsSync(METRICS_DIR)) {
-    fs.mkdirSync(METRICS_DIR, { recursive: true });
+  if (!fs.existsSync(LOGS_DIR)) {
+    fs.mkdirSync(LOGS_DIR, { recursive: true });
   }
-  const today = new Date().toISOString().split('T')[0];
-  const errorFile = path.join(METRICS_DIR, `errors_${today}.json`);
+  const errorFile = path.join(LOGS_DIR, 'fetcher-error.json');
 
   let errors = [];
   if (fs.existsSync(errorFile)) {

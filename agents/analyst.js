@@ -13,6 +13,18 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const METRICS_DIR = path.join(__dirname, '..', 'data', 'metrics');
 const PERSONAS_DIR = path.join(__dirname, '..', 'data', 'personas');
+const FEEDBACK_LOG = path.join(__dirname, '..', 'doc', '08_feedback_log.md');
+const PEOPLE_INSIGHTS = path.join(__dirname, '..', 'data', 'people_insights.json');
+
+/**
+ * 週番号を取得（YYYY-WW形式）
+ */
+function getWeekNumber() {
+  const d = new Date();
+  const jan1 = new Date(d.getFullYear(), 0, 1);
+  const wk = Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+  return `${d.getFullYear()}-${String(wk).padStart(2, '0')}`;
+}
 
 /**
  * 日次分析
@@ -179,6 +191,132 @@ JSONのみ出力してください：
 }
 
 /**
+ * 週次分析結果をdoc/08_feedback_log.mdに自動追記（A-5）
+ */
+function appendToFeedbackLog(weeklyResult, engageCorrelation = null) {
+  if (!weeklyResult) return;
+  const weekId = getWeekNumber();
+
+  const hotPatterns = (weeklyResult.top_post_types || []).map(t => `- 型：${t} × テーマ：${(weeklyResult.top_themes || [])[0] || '—'}\n  理由（仮説）：AIが分析したパフォーマンスデータより`).join('\n');
+  const coldPatterns = (weeklyResult.bottom_themes || []).map(t => `- テーマ：${t}\n  理由（仮説）：パフォーマンスが低かったため`).join('\n');
+  const engageSection = engageCorrelation
+    ? `\n### 絡んだアカウントとフォロワー増加の相関\n${engageCorrelation}\n`
+    : '';
+
+  const entry = `\n## ${weekId}（自動追記）\n
+### 今週伸びたパターン\n${hotPatterns || '- データ不足'}\n
+### 今週伸びなかったパターン\n${coldPatterns || '- データ不足'}${engageSection}
+### 意外な発見\n- ${weeklyResult.next_week_strategy ? weeklyResult.next_week_strategy.slice(0, 80) : 'データ蓄積中'}\n
+### ルール化の提案（Sの判断待ち）\n- [ ] 上位型（${(weeklyResult.top_post_types || []).slice(0,2).join('/')}）の投稿比率を高める\n`;
+
+  try {
+    const existing = fs.existsSync(FEEDBACK_LOG) ? fs.readFileSync(FEEDBACK_LOG, 'utf-8') : '';
+    // ## ログ の後に挿入（最新が上に来るように）
+    const insertPoint = existing.indexOf('## ログ');
+    if (insertPoint === -1) {
+      fs.appendFileSync(FEEDBACK_LOG, entry);
+    } else {
+      const insertAfter = insertPoint + '## ログ'.length;
+      const commentEnd = existing.indexOf('\n', existing.indexOf('<!-- アナリストが毎週自動追記'));
+      const pos = commentEnd > insertAfter ? commentEnd + 1 : insertAfter + 1;
+      const newContent = existing.slice(0, pos) + '\n' + entry + existing.slice(pos);
+      fs.writeFileSync(FEEDBACK_LOG, newContent);
+    }
+    console.log(`[Analyst] doc/08_feedback_log.md に週次サマリーを追記 (${weekId})`);
+  } catch (e) {
+    console.error('[Analyst] feedback_log 追記エラー:', e.message);
+  }
+}
+
+/**
+ * engage_log.jsonを読み込んでフォロワー増加との相関テキストを生成（A-8）
+ */
+function analyzeEngageLog() {
+  const engageFile = path.join(__dirname, '..', 'data', 'engage_log.json');
+  if (!fs.existsSync(engageFile)) return null;
+  try {
+    const log = JSON.parse(fs.readFileSync(engageFile, 'utf-8'));
+    if (!log || log.length === 0) return null;
+    const summary = log.slice(-10).map(e => `${e.account}（${e.follower_change > 0 ? '+' : ''}${e.follower_change || 0}フォロワー増減）`).join('、');
+    return `直近の絡み先：${summary}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * X上のアカウント投稿を分析してpeople_insights.jsonに保存（A-8b）
+ */
+async function analyzeAccount(account, tweets) {
+  if (!tweets || tweets.length === 0) return null;
+
+  const tweetsStr = tweets.slice(0, 20).map((t, i) =>
+    `[${i+1}] ${t.text?.slice(0, 120) || ''} (❤${t.public_metrics?.like_count || 0})`
+  ).join('\n');
+
+  const prompt = `以下のXアカウント（${account}）の投稿を分析してください。
+
+投稿一覧（最大20件）：
+${tweetsStr}
+
+以下の視点で分析し、JSONで出力してください：
+1. 1行目の構造パターン（疑問形・数字・体験談・断言のどれが多いか）
+2. 投稿の型の傾向（比較・正直・tips・問いかけ・体験談）
+3. 頻出キーワード・フレーズ・特徴的な語尾（5個まで）
+4. いいねが多い投稿と少ない投稿の差
+5. AIクリエイター・制作現場ジャンルに置き換えた投稿例を1本
+
+JSONのみ出力：
+{
+  "account": "${account}",
+  "analyzed_at": "${new Date().toISOString()}",
+  "first_line_pattern": "疑問形|数字|体験談|断言",
+  "top_types": ["型①", "型⑤"],
+  "keywords": ["頻出語1", "頻出語2", "頻出語3"],
+  "buzz_pattern": "バズパターンの1行要約",
+  "high_vs_low": "いいねが多い/少ない投稿の差の仮説",
+  "sample_post": "Sのジャンルで生成した投稿例（140文字以内）",
+  "trust_level": "HIGH|MID|LOW"
+}`;
+
+  const response = await client.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 1000,
+    system: [
+      { type: 'text', text: 'あなたはSNS投稿パターン分析の専門家です。バズ投稿の構造を客観的に分析します。', cache_control: { type: 'ephemeral' } }
+    ],
+    messages: [{ role: 'user', content: prompt }],
+  });
+
+  const text = response.content.find(b => b.type === 'text')?.text || '{}';
+  try {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const result = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    if (!result) return null;
+
+    // people_insights.jsonに追記・更新
+    let insights = { insights: [] };
+    if (fs.existsSync(PEOPLE_INSIGHTS)) {
+      try { insights = JSON.parse(fs.readFileSync(PEOPLE_INSIGHTS, 'utf-8')); } catch {}
+    }
+    const idx = insights.insights.findIndex(i => i.account === account);
+    if (idx !== -1) {
+      insights.insights[idx] = result;
+    } else {
+      insights.insights.push(result);
+    }
+    insights.updated_at = new Date().toISOString();
+    fs.writeFileSync(PEOPLE_INSIGHTS, JSON.stringify(insights, null, 2));
+    console.log(`[Analyst] people_insights.json を更新: ${account}`);
+
+    return result;
+  } catch (e) {
+    console.error('[Analyst] analyzeAccount parse error:', e.message);
+    return null;
+  }
+}
+
+/**
  * ターゲット人物像の更新（月次）
  */
 async function updatePersonas(allMetrics) {
@@ -276,9 +414,10 @@ function loadMetrics(days = 7) {
 /**
  * メイン処理
  * mode: 'daily' | 'weekly' | 'monthly'
+ * forceMode: --force フラグ（メトリクスがなくてもテストデータで実行）
  */
-async function main(mode = 'daily', testMode = false) {
-  console.log(`[Analyst] 起動 - ${mode}分析 (テストモード: ${testMode})`);
+async function main(mode = 'daily', testMode = false, forceMode = false) {
+  console.log(`[Analyst] 起動 - ${mode}分析 (テストモード: ${testMode}, 強制: ${forceMode})`);
 
   if (!fs.existsSync(PERSONAS_DIR)) {
     fs.mkdirSync(PERSONAS_DIR, { recursive: true });
@@ -287,13 +426,13 @@ async function main(mode = 'daily', testMode = false) {
   const days = mode === 'monthly' ? 30 : mode === 'weekly' ? 7 : 1;
   let metrics = loadMetrics(days);
 
-  if (!testMode && metrics.length === 0) {
+  if (!testMode && !forceMode && metrics.length === 0) {
     console.warn(`[Analyst] メトリクスデータなし（Free Tier制限または未投稿）。分析をスキップします。`);
     return null;
   }
 
   // メトリクスが全てゼロ（Free Tier制限でスキップされた）場合も警告してスキップ
-  if (!testMode) {
+  if (!testMode && !forceMode) {
     const hasRealData = metrics.some(m =>
       (m.metrics_1h?.impressions || 0) > 0 || (m.metrics_24h?.impressions || 0) > 0
     );
@@ -303,7 +442,7 @@ async function main(mode = 'daily', testMode = false) {
     }
   }
 
-  if (testMode && metrics.length === 0) {
+  if ((testMode || forceMode) && metrics.length === 0) {
     // テスト用ダミーメトリクス生成
     metrics = [{
       post_id: 'test_001',
@@ -338,6 +477,12 @@ async function main(mode = 'daily', testMode = false) {
       console.log('\n[Analyst] ライターへのフィードバック:');
       result.feedback_to_writer.forEach(f => console.log(`  - ${f}`));
     }
+
+    // 週次の場合はfeedback_log.mdに追記（A-5）
+    if (mode === 'weekly') {
+      const engageCorr = analyzeEngageLog();
+      appendToFeedbackLog(result, engageCorr);
+    }
   }
 
   return result;
@@ -345,8 +490,9 @@ async function main(mode = 'daily', testMode = false) {
 
 if (require.main === module) {
   const testMode = process.argv.includes('--test');
+  const forceMode = process.argv.includes('--force');
   const mode = process.argv.find(a => ['daily', 'weekly', 'monthly'].includes(a)) || 'daily';
-  main(mode, testMode).catch(console.error);
+  main(mode, testMode, forceMode).catch(console.error);
 }
 
-module.exports = { main };
+module.exports = { main, analyzeAccount };

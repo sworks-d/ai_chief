@@ -8,7 +8,9 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const axios = require('axios');
 const poster = require('./agents/poster');
+const analyst = require('./agents/analyst');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,6 +18,9 @@ const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, 'data');
 const PERSONAS_DIR = path.join(DATA_DIR, 'personas');
 const METRICS_DIR = path.join(DATA_DIR, 'metrics');
+const PEOPLE_CACHE = path.join(DATA_DIR, 'people_cache.json');
+const PEOPLE_INSIGHTS = path.join(DATA_DIR, 'people_insights.json');
+const API_STATUS_FILE = path.join(DATA_DIR, 'api_status.json');
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'ui')));
@@ -372,15 +377,33 @@ app.get('/api/posts/published', (req, res) => {
 
 /**
  * GET /api/status
- * システム状態確認
+ * システム状態 + API残量確認（B-3）
  */
-app.get('/api/status', (req, res) => {
+app.get('/api/status', async (req, res) => {
   const today = getToday();
   const checkedFile = path.join(DATA_DIR, 'checked', `${today}.json`);
   const queueFile = path.join(DATA_DIR, 'queue', `${today}.json`);
 
   const checked = readJSON(checkedFile);
   const queue = readJSON(queueFile);
+
+  // X API残量（poster.jsが記録したapi_status.jsonから読む）
+  const apiStatus = readJSON(API_STATUS_FILE, {});
+
+  // Anthropic残高（APIから取得を試みる）
+  let anthropicBalance = null;
+  try {
+    const resp = await axios.get('https://api.anthropic.com/v1/organizations/me', {
+      headers: {
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      timeout: 3000,
+    });
+    anthropicBalance = resp.data?.billing?.available_credit_usd ?? null;
+  } catch {
+    // API取得失敗はスキップ
+  }
 
   res.json({
     date: today,
@@ -392,12 +415,77 @@ app.get('/api/status', (req, res) => {
       posted: queue.filter(p => p.status === 'posted').length,
       rejected: queue.filter(p => p.status === 'rejected').length,
     },
+    anthropic: {
+      balance: anthropicBalance,
+    },
+    x: {
+      posts_remaining: apiStatus.posts_remaining ?? null,
+      posts_limit: apiStatus.posts_limit ?? 1500,
+      reset_date: apiStatus.reset_date ?? null,
+    },
   });
+});
+
+// ============================
+// API: PEOPLEパネル（A-8b）
+// ============================
+
+/**
+ * GET /api/people
+ * people_cache.json を返す
+ */
+app.get('/api/people', (req, res) => {
+  const cache = readJSON(PEOPLE_CACHE, { watch: [], engage: [], similar: [] });
+  res.json(cache);
+});
+
+/**
+ * POST /api/people/analyze
+ * アカウントの投稿をanalyst.jsで分析してpeople_insights.jsonに保存
+ * body: { account: "@handle", tweets: [...] }
+ */
+app.post('/api/people/analyze', async (req, res) => {
+  const { account, tweets } = req.body;
+  if (!account) {
+    return res.status(400).json({ error: 'accountが必要です' });
+  }
+
+  try {
+    console.log(`[Server] 投稿分析: ${account}`);
+    const result = await analyst.analyzeAccount(account, tweets || []);
+    if (!result) {
+      return res.status(500).json({ success: false, error: '分析に失敗しました' });
+    }
+    res.json({ success: true, analysis: result });
+  } catch (e) {
+    console.error('[Server] analyze error:', e.message);
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+/**
+ * POST /api/people/reflect
+ * people_insights.jsonを全エージェントが参照できる状態に確定保存
+ */
+app.post('/api/people/reflect', (req, res) => {
+  if (!fs.existsSync(PEOPLE_INSIGHTS)) {
+    return res.status(404).json({ error: 'people_insights.jsonがありません' });
+  }
+  const insights = readJSON(PEOPLE_INSIGHTS, { insights: [] });
+  insights.reflected_at = new Date().toISOString();
+  writeJSON(PEOPLE_INSIGHTS, insights);
+  console.log(`[Server] people_insights.json を全エージェントに反映`);
+  res.json({ success: true, count: insights.insights.length });
 });
 
 // ============================
 // フロントエンドルーティング
 // ============================
+
+// マニュアルページ（B-2）
+app.get('/manual', (req, res) => {
+  res.sendFile(path.join(__dirname, 'ui', 'manual.html'));
+});
 
 // UIへのフォールバック
 app.get('/', (req, res) => {

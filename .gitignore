@@ -11,6 +11,9 @@ npm-debug.log*
 data/posts/
 data/metrics/
 data/personas/
+data/api_status.json
+data/engage_log.json
+data/logs/
 
 # OS
 .DS_Store

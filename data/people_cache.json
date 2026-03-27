@@ -1,0 +1,66 @@
+{
+  "updated_at": "2026-03-27T00:00:00Z",
+  "watch": [
+    {
+      "account": "@ai_design_jp",
+      "name": "AIデザイン研究所",
+      "follower_count": 12000,
+      "description": "AI×デザイン・制作現場の情報を発信。Sのターゲット層と読者が被る。",
+      "trust_level": "HIGH",
+      "overlap": "HIGH",
+      "post_frequency": "毎日",
+      "latest_buzz": "Midjourney v6でクライアントワーク、実際どこまで使えるか試した。",
+      "latest_likes": 850,
+      "analyst_comment": "現場目線の投稿が多い。1行目が疑問形の投稿が特に伸びてる。"
+    },
+    {
+      "account": "@creative_ai_pro",
+      "name": "クリエイティブAIプロ",
+      "follower_count": 28000,
+      "description": "広告・映像・WEB制作でのAI活用を発信。フォロワーの8割がクリエイター。",
+      "trust_level": "HIGH",
+      "overlap": "HIGH",
+      "post_frequency": "週3",
+      "latest_buzz": "代理店のソルジャー案件にAIを投入してみた結果。",
+      "latest_likes": 1200,
+      "analyst_comment": "Sと近い立場から発信してる競合。バズパターンの参考になる。"
+    },
+    {
+      "account": "@ai_copyright_jp",
+      "name": "AI著作権ウォッチ",
+      "follower_count": 8500,
+      "description": "AI著作権・法律動向の専門的な解説。信頼度が高い情報源。",
+      "trust_level": "HIGH",
+      "overlap": "MID",
+      "post_frequency": "週2",
+      "latest_buzz": "EU AI Act、日本への影響を整理した。",
+      "latest_likes": 620,
+      "analyst_comment": "著作権情報の一次ソースとして信頼度が高い。"
+    }
+  ],
+  "engage": [],
+  "similar": [
+    {
+      "account": "@ai_marketing_tips",
+      "name": "AIマーケティングtips",
+      "follower_count": 35000,
+      "description": "マーケ視点のAI活用。情報量は多いが現場感が薄い。",
+      "trust_level": "MID",
+      "overlap": "MID",
+      "strength": "情報の網羅性・更新頻度",
+      "weakness": "現場感がない・再現性が低い",
+      "differentiation": "Sは現場リアル・再現できる手順を出す"
+    },
+    {
+      "account": "@ai_engineer_note",
+      "name": "AIエンジニアnote",
+      "follower_count": 45000,
+      "description": "エンジニア視点のAI解説。技術的すぎてクリエイター向けではない。",
+      "trust_level": "HIGH",
+      "overlap": "LOW",
+      "strength": "技術的正確性・フォロワー数",
+      "weakness": "クリエイター向けじゃない・抽象的",
+      "differentiation": "Sはクリエイター専門・ツールの実務利用に特化"
+    }
+  ]
+}

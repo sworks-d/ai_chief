@@ -28,6 +28,50 @@ const sceneMap = fs.readFileSync(path.join(KNOWLEDGE_DIR, 'scene_map.md'), 'utf-
 const ngWords = fs.readFileSync(path.join(KNOWLEDGE_DIR, 'ng_words.md'), 'utf-8');
 
 /**
+ * people_insights.jsonから最新5件のバズパターンを読み込む（A-8）
+ */
+function loadPeopleInsightsSection() {
+  const insightsFile = path.join(__dirname, '..', 'data', 'people_insights.json');
+  if (!fs.existsSync(insightsFile)) return '';
+  try {
+    const insights = JSON.parse(fs.readFileSync(insightsFile, 'utf-8'));
+    const latest5 = (insights.insights || []).slice(-5);
+    if (latest5.length === 0) return '';
+    const lines = latest5.map(i =>
+      `- ${i.account}: バズ型「${i.buzz_pattern || '—'}」 頻出型[${(i.top_types || []).join('/')}] 頻出語[${(i.keywords || []).slice(0, 3).join(',')}]`
+    ).join('\n');
+    return `\n\n=== 今バズってる型・キーワード（参考）===\n${lines}`;
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * キャッシュ対象の安定したシステムコンテンツを構築（A-2）
+ */
+function buildSystemContent() {
+  const peopleSection = loadPeopleInsightsSection();
+  return `=== キャラクター定義 ===
+${character}
+
+=== ターゲット定義 ===
+${target}
+
+=== 投稿の型 ===
+${postTypes}
+
+=== シーンマップ ===
+${sceneMap}
+
+=== NGワード・禁止表現 ===
+${ngWords}
+
+=== 追加禁止表現（絶対使わない）===
+「絶対」「必ず」「間違いなく」「〜ということです」「〜を覚えておいてください」「現場的には」「参考になれば幸いです」
+実クライアント名・案件の具体情報は一切書かない。医療・法律・投資の断言もしない。${peopleSection}`;
+}
+
+/**
  * X APIの重み付き文字数を計算（日本語=2文字扱い）
  */
 function xWeightedLength(text) {
@@ -87,28 +131,12 @@ function selectPostType(infoType, themeTag) {
 async function generateShortPost(item, platform, attempt = 1) {
   const postType = selectPostType(item.info_type, item.theme_tag);
   // X: 日本語は2文字カウントのため実質140文字以内に制限
-  const charLimit = platform === 'X' ? 140 : 500;
   const charNote = platform === 'X' ? '（日本語140文字以内・X重み付き280文字以内）' : '（500文字以内）';
 
-  const prompt = `あなたはShotaro（S）の代筆エージェントです。
-以下のナレッジを完全に理解した上で投稿を生成してください。
+  // 曜日別推奨型（A-4: 週の投稿密度）
+  const dayGuide = ['','月：問題提起系','火：tips系（手順）','水：THREAD推奨','木：比較・ジャッジ系','金：本音系','土：問いかけ',''][DAY_OF_WEEK];
 
-=== キャラクター定義 ===
-${character}
-
-=== ターゲット定義 ===
-${target}
-
-=== 投稿の型 ===
-${postTypes}
-
-=== シーンマップ ===
-${sceneMap}
-
-=== NGワード ===
-${ngWords}
-
----
+  const userPrompt = `あなたはShotaro（S）の代筆エージェントです。上記のナレッジを完全に理解した上で投稿を生成してください。
 
 ## アクティブルール（最優先）
 
@@ -119,23 +147,32 @@ ${ngWords}
 
 ### 1行目のルール
 優先：体験から入る「〜してみたんだけど」/ 疑問形 / 数字・具体的な変化
-禁止：「〜です。」で始まる説明口調 / 「みなさん」呼びかけ / 「今日は〜について」宣言
+禁止：「〜です。」で始まる説明口調 / 「みなさん」「皆さん」の呼びかけ / 「今日は〜について」の宣言型
 
 ### 締め方のルール
-優先：シーンが浮かぶ行動 / 問いかけ / 独り言
-禁止：断言で終わる / 「参考になれば幸いです」系
+優先：シーンが浮かぶ行動（「次の提案、これで突撃してみます。笑」）/ 問いかけ / 独り言
+禁止：断言で終わる（「〜です。」のみ） / 「参考になれば幸いです」系
 
 ### カウンター構造
-全投稿の70%以上にカウンターを入れる
+全投稿の70%以上にカウンターを入れる（強い言葉の後に「笑」「知らんけど」「たぶん」等）
 
 ### ソース明示
 公式発表・数字が出る場合は「〜が発表」と明記
 自分の体験の場合は「実際にやってみたら」と明記
+未確認の場合は「まだ確認中だけど」と明記
 
 ### tipsの具体化
 手順は番号付き（1・2・3）で書く
 結果は具体的な変化で書く（「効率が上がった」ではなく「修正が3回→0回になった」）
 再現できる情報（プロンプト・ツール・手順）を1つ以上入れる
+
+### noteへの誘導
+プロンプト全文・詳細手順は「全部見せない」
+「残り」への期待を作ってから「詳細はnoteに置いてます」と自然に誘導
+（THREAD型でなくても部分的に見せて誘導できる）
+
+### 週の推奨タイプ（今日）
+${dayGuide}
 
 ---
 
@@ -172,7 +209,10 @@ ${item.type_b_hint ? `B型ヒント：${item.type_b_hint.hint}` : ''}
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 1200,
-    messages: [{ role: 'user', content: prompt }],
+    system: [
+      { type: 'text', text: buildSystemContent(), cache_control: { type: 'ephemeral' } }
+    ],
+    messages: [{ role: 'user', content: userPrompt }],
   });
 
   const text = response.content.find(b => b.type === 'text')?.text || '{}';
@@ -204,35 +244,23 @@ ${item.type_b_hint ? `B型ヒント：${item.type_b_hint.hint}` : ''}
 async function generateThreadPosts(item) {
   const postType = selectPostType(item.info_type, item.theme_tag);
 
-  const prompt = `あなたはShotaro（S）の代筆エージェントです。
-以下のナレッジを完全に理解した上で、Xのスレッド投稿を生成してください。
-
-=== キャラクター定義 ===
-${character}
-
-=== ターゲット定義 ===
-${target}
-
-=== NGワード ===
-${ngWords}
-
----
+  const userPrompt = `あなたはShotaro（S）の代筆エージェントです。上記のナレッジを完全に理解した上で、Xのスレッド投稿を生成してください。
 
 ## アクティブルール（最優先）
 
 ### 1行目のルール
 優先：体験から入る「〜してみたんだけど」/ 疑問形 / 数字・具体的な変化
-禁止：「〜です。」で始まる説明口調
+禁止：「〜です。」で始まる説明口調 / 「みなさん」呼びかけ
 
 ### tipsの具体化
 手順は番号付き（1・2・3）で書く
-結果は具体的な変化で書く
+結果は具体的な変化で書く（「修正が3回→0回」レベルの数字）
 再現できる情報を1つ以上入れる
 
 ### noteへの誘導
 プロンプト全文・詳細手順はnoteで公開
 投稿では「一部だけ」見せる
-「残り」への期待を作ってからnoteに誘導
+「残り」への期待を作ってからnoteに自然に誘導
 
 ---
 
@@ -297,7 +325,10 @@ ${ngWords}
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 2000,
-    messages: [{ role: 'user', content: prompt }],
+    system: [
+      { type: 'text', text: buildSystemContent(), cache_control: { type: 'ephemeral' } }
+    ],
+    messages: [{ role: 'user', content: userPrompt }],
   });
 
   const text = response.content.find(b => b.type === 'text')?.text || '{}';
@@ -326,16 +357,8 @@ ${ngWords}
  * 土曜の問いかけ投稿を生成（X専用）
  */
 async function generateQuestionPost() {
-  const prompt = `あなたはShotaro（S）の代筆エージェントです。
-以下のナレッジを参照して、フォロワーへの「問いかけ投稿」を生成してください。
-
-=== キャラクター定義 ===
-${character}
-
-=== ターゲット定義 ===
-${target}
-
----
+  const userPrompt = `あなたはShotaro（S）の代筆エージェントです。
+上記のナレッジを参照して、フォロワーへの「問いかけ投稿」を生成してください。
 
 ## 問いかけ投稿の設計
 
@@ -376,7 +399,10 @@ ${target}
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 600,
-    messages: [{ role: 'user', content: prompt }],
+    system: [
+      { type: 'text', text: buildSystemContent(), cache_control: { type: 'ephemeral' } }
+    ],
+    messages: [{ role: 'user', content: userPrompt }],
   });
 
   const text = response.content.find(b => b.type === 'text')?.text || '{}';

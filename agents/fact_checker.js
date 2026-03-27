@@ -18,6 +18,34 @@ const INPUT_FILE = path.join(INPUT_DIR, `${TODAY}.json`);
 const OUTPUT_FILE = path.join(OUTPUT_DIR, `${TODAY}.json`);
 
 /**
+ * HIGH信頼アカウントリストを読み込む（people_cache.json）
+ */
+function loadHighTrustAccounts() {
+  const cacheFile = path.join(__dirname, '..', 'data', 'people_cache.json');
+  const insightsFile = path.join(__dirname, '..', 'data', 'people_insights.json');
+  const accounts = new Set();
+  if (fs.existsSync(cacheFile)) {
+    try {
+      const cache = JSON.parse(fs.readFileSync(cacheFile, 'utf-8'));
+      (cache.watch || []).filter(w => w.trust_level === 'HIGH').forEach(w => accounts.add(w.account));
+    } catch {}
+  }
+  if (fs.existsSync(insightsFile)) {
+    try {
+      const insights = JSON.parse(fs.readFileSync(insightsFile, 'utf-8'));
+      (insights.insights || []).filter(i => i.trust_level === 'HIGH').forEach(i => accounts.add(i.account));
+    } catch {}
+  }
+  return accounts;
+}
+
+function upgradeTrust(trust) {
+  if (trust === 'LOW') return 'MID';
+  if (trust === 'MID') return 'HIGH';
+  return trust;
+}
+
+/**
  * 情報の4タイプ判定とスコアリング
  */
 async function checkItem(item) {
@@ -110,10 +138,16 @@ async function main(testMode = false) {
 
   console.log(`[FactChecker] ${items.length}件を評価中...`);
 
+  const highTrustAccounts = loadHighTrustAccounts();
   const checkedItems = [];
 
   for (const item of items) {
     const evaluation = await checkItem(item);
+    // HIGH信頼アカウントが発信してる情報は信頼度をワンランク上げる
+    if (item.author && highTrustAccounts.has(item.author) && evaluation.trust !== 'HIGH') {
+      evaluation.trust = upgradeTrust(evaluation.trust);
+      console.log(`[FactChecker] 信頼度UP (${item.author}): ${evaluation.trust}`);
+    }
 
     // NGはスキップ
     if (evaluation.info_type === 'NG') {

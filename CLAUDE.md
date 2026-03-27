@@ -26,6 +26,7 @@ noteへの誘導でマネタイズする。
 | doc/08_feedback_log.md | アナリストが自動追記するフィードバックログ |
 | doc/09_tuning_history.md | Sが月1回更新するチューニング履歴 |
 | doc/10_active_rules.md | 現在有効なルール最新版（最優先で参照） |
+| doc/12_people_feedback.md | PEOPLEパネル・投稿FBループ設計（必読） |
 
 ---
 

@@ -17,6 +17,20 @@ const TODAY = new Date().toISOString().split('T')[0];
 const DATA_DIR = path.join(__dirname, '..', 'data', 'research');
 const OUTPUT_FILE = path.join(DATA_DIR, `${TODAY}.json`);
 
+/**
+ * people_cache.jsonのWATCHリストを読み込む
+ */
+function loadWatchAccounts() {
+  const cacheFile = path.join(__dirname, '..', 'data', 'people_cache.json');
+  if (fs.existsSync(cacheFile)) {
+    try {
+      const cache = JSON.parse(fs.readFileSync(cacheFile, 'utf-8'));
+      return (cache.watch || []).map(w => ({ account: w.account, name: w.name, description: w.description }));
+    } catch {}
+  }
+  return [];
+}
+
 // ソース定義（実際のWebスクレイピング代わりにClaudeが最新情報を生成）
 const SOURCES = {
   MICRO: {
@@ -52,9 +66,14 @@ const SOURCES = {
  */
 async function researchLayer(layer) {
   const config = SOURCES[layer];
+  const watchAccounts = loadWatchAccounts();
+  const watchSection = watchAccounts.length > 0
+    ? `\n優先監視アカウント（これらのアカウントが最近取り上げたトピックを優先的に含める）：\n${watchAccounts.map(w => `${w.account}（${w.name}）`).join('、')}\n`
+    : '';
+
   const prompt = `あなたはAIとクリエイティブ業界の情報収集エージェントです。
 今日（${TODAY}）時点での最新情報を収集してください。
-
+${watchSection}
 収集テーマ：
 ${config.themes.map((t, i) => `${i + 1}. ${t}`).join('\n')}
 

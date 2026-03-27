@@ -131,7 +131,7 @@ header {
 
 @media (min-width: 1000px) {
   .layout {
-    grid-template-columns: 300px 1fr 280px;
+    grid-template-columns: 280px 1fr 260px 260px;
     min-height: calc(100vh - 56px);
   }
 }
@@ -879,6 +879,114 @@ header {
 .p-posted-url a { color: var(--blue); text-decoration: none; }
 .p-posted-url a:hover { color: var(--white); }
 
+/* ── API STATUS ── */
+.h-api {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+.api-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  color: var(--white3);
+  white-space: nowrap;
+}
+.api-item.ok { color: var(--green); border-color: rgba(200,240,74,0.2); }
+.api-item.warn { color: var(--amber); border-color: rgba(240,150,10,0.3); }
+.api-item.err { color: var(--red); border-color: rgba(255,60,60,0.3); }
+
+/* ── PEOPLE PANEL ── */
+.p-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+.p-tab {
+  flex: 1;
+  padding: 9px 10px;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--white3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  text-align: center;
+  transition: color 0.15s, border-color 0.15s;
+}
+.p-tab:hover { color: var(--white2); }
+.p-tab.active { color: var(--green); border-bottom-color: var(--green); }
+.p-panel { display: none; }
+.p-panel.active { display: block; animation: rise 0.2s ease both; }
+
+.ppl-card {
+  border: 1px solid var(--border);
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.ppl-card:hover { border-color: var(--border2); }
+.ppl-head {
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--black2);
+  border-bottom: 1px solid var(--border);
+}
+.ppl-handle {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--green);
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+.ppl-name {
+  font-size: 11px;
+  color: var(--white2);
+  flex: 1;
+}
+.ppl-fc {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--white3);
+}
+.ppl-body { padding: 10px 14px; }
+.ppl-desc {
+  font-size: 11px;
+  color: var(--white2);
+  line-height: 1.65;
+  margin-bottom: 8px;
+}
+.ppl-buzz {
+  font-size: 11px;
+  color: var(--white3);
+  line-height: 1.6;
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  border-left: 2px solid var(--border2);
+  font-style: italic;
+}
+.ppl-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.ppl-analysis {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  background: rgba(200,240,74,0.03);
+  font-size: 11px;
+  color: var(--white2);
+  line-height: 1.7;
+  display: none;
+}
+.ppl-analysis.open { display: block; animation: rise 0.2s ease both; }
+.ppl-analysis strong { color: var(--green); font-weight: 500; }
+
 /* ── INTEL DATE NAV ── */
 .intel-date-nav {
   display: flex;
@@ -917,6 +1025,10 @@ header {
   <div class="h-logo">余白のAI</div>
   <div class="h-sub">DAILY INPUT<br>APPROVE · ANALYZE</div>
   <div class="h-right">
+    <div class="h-api" id="h-api-status" style="display:none">
+      <span class="api-item" id="api-anthropic">$—</span>
+      <span class="api-item" id="api-x">X —</span>
+    </div>
     <span class="h-date" id="h-date">03.27 · 07:02</span>
     <span class="h-live">LIVE</span>
     <span class="h-pending" id="h-badge">3</span>
@@ -968,6 +1080,28 @@ header {
     <div class="panel-body" id="hist-wrap"></div>
   </div>
 
+  <!-- PEOPLE -->
+  <div class="panel" id="panel-people">
+    <div class="panel-head">
+      <span class="panel-title">PEOPLE</span>
+      <span class="panel-label">参考アカウント</span>
+    </div>
+    <div class="p-tabs">
+      <div class="p-tab active" id="ptab-watch" onclick="switchPTab('watch')">WATCH</div>
+      <div class="p-tab" id="ptab-engage" onclick="switchPTab('engage')">ENGAGE</div>
+      <div class="p-tab" id="ptab-similar" onclick="switchPTab('similar')">SIMILAR</div>
+    </div>
+    <div class="p-panel active" id="ppanel-watch">
+      <div class="panel-body" id="people-watch-body"></div>
+    </div>
+    <div class="p-panel" id="ppanel-engage">
+      <div class="panel-body" id="people-engage-body"></div>
+    </div>
+    <div class="p-panel" id="ppanel-similar">
+      <div class="panel-body" id="people-similar-body"></div>
+    </div>
+  </div>
+
 </div>
 
 <!-- BOTTOM NAV -->
@@ -984,6 +1118,10 @@ header {
   <div class="bt" id="bt-stats" onclick="sw('stats')">
     <span class="bt-icon">DA</span>
     <span class="bt-label">Data</span>
+  </div>
+  <div class="bt" id="bt-people" onclick="sw('people')">
+    <span class="bt-icon">PE</span>
+    <span class="bt-label">People</span>
   </div>
 </nav>
 
@@ -1004,10 +1142,11 @@ function escAttr(str) {
 
 // ---- パネル切替 ----
 function sw(name) {
-  ['intel','queue','stats'].forEach(n => {
+  ['intel','queue','stats','people'].forEach(n => {
     document.getElementById('panel-' + n).classList.toggle('active', n === name);
     document.getElementById('bt-' + n).classList.toggle('active', n === name);
   });
+  if (name === 'people') loadPeople();
 }
 
 // ---- 3層トグル ----
@@ -1662,6 +1801,182 @@ function updateHeaderDate() {
   if (el) el.textContent = mm + '.' + dd + ' · ' + hh + ':' + min;
 }
 
+// ---- PEOPLE タブ切替 ----
+function switchPTab(tab) {
+  ['watch','engage','similar'].forEach(t => {
+    document.getElementById('ptab-' + t).classList.toggle('active', t === tab);
+    document.getElementById('ppanel-' + t).classList.toggle('active', t === tab);
+  });
+}
+
+// ---- PEOPLE カード HTML生成 ----
+function buildPeopleCard(person, type) {
+  const fmtNum = n => n >= 10000 ? (n/10000).toFixed(1) + 'w' : n >= 1000 ? (n/1000).toFixed(1) + 'k' : String(n);
+  const trustClass = person.trust_level === 'HIGH' ? 't-g' : person.trust_level === 'MID' ? 't-b' : 't-w';
+  const overlapClass = person.overlap === 'HIGH' ? 't-g' : person.overlap === 'MID' ? 't-b' : 't-w';
+  const accountId = escAttr(person.account || '');
+  const iidKey = 'ppl-' + accountId;
+
+  let extraInfo = '';
+  if (type === 'watch') {
+    extraInfo = (person.latest_buzz ? '<div class="ppl-buzz">"' + escHtml(person.latest_buzz) + '"</div>' : '')
+      + (person.analyst_comment ? '<div style="font-size:10px;color:var(--white3);margin-bottom:8px">→ ' + escHtml(person.analyst_comment) + '</div>' : '');
+  } else if (type === 'similar') {
+    extraInfo = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'
+      + (person.strength ? '<span class="tag t-g">強み: ' + escHtml(person.strength.slice(0,15)) + '</span>' : '')
+      + (person.weakness ? '<span class="tag t-r">弱み: ' + escHtml(person.weakness.slice(0,15)) + '</span>' : '')
+      + '</div>';
+  }
+
+  const analyzeBtn = type !== 'engage'
+    ? '<button class="btn" style="color:var(--blue);border-color:rgba(80,144,240,0.3)" onclick="analyzeAccount(\'' + accountId + '\')">投稿を分析</button>'
+    : '';
+
+  return '<div class="ppl-card" id="pplcard-' + accountId + '">'
+    + '<div class="ppl-head">'
+    + '<span class="ppl-handle">' + escHtml(person.account || '') + '</span>'
+    + '<span class="ppl-name">' + escHtml(person.name || '') + '</span>'
+    + (person.follower_count ? '<span class="ppl-fc">' + fmtNum(person.follower_count) + '</span>' : '')
+    + '</div>'
+    + '<div class="ppl-body">'
+    + '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">'
+    + (person.trust_level ? '<span class="tag ' + trustClass + '">' + escHtml(person.trust_level) + '</span>' : '')
+    + (person.overlap ? '<span class="tag ' + overlapClass + '">重複: ' + escHtml(person.overlap) + '</span>' : '')
+    + (person.post_frequency ? '<span class="tag t-w">' + escHtml(person.post_frequency) + '</span>' : '')
+    + '</div>'
+    + '<div class="ppl-desc">' + escHtml(person.description || '') + '</div>'
+    + extraInfo
+    + '<div class="ppl-actions">'
+    + analyzeBtn
+    + '<button class="btn" onclick="markEngaged(\'' + accountId + '\')">絡んだ</button>'
+    + '<button class="btn" onclick="markFollowed(\'' + accountId + '\')">フォロー済</button>'
+    + '</div>'
+    + '</div>'
+    + '<div class="ppl-analysis" id="ppl-analysis-' + accountId + '"></div>'
+    + '</div>';
+}
+
+// ---- PEOPLE パネル描画 ----
+function renderPeople(data) {
+  const watchBody = document.getElementById('people-watch-body');
+  const engageBody = document.getElementById('people-engage-body');
+  const similarBody = document.getElementById('people-similar-body');
+
+  const watch = data.watch || [];
+  const engage = data.engage || [];
+  const similar = data.similar || [];
+
+  watchBody.innerHTML = watch.length > 0
+    ? watch.map(p => buildPeopleCard(p, 'watch')).join('')
+    : '<div style="color:var(--white3);font-size:12px;padding:32px;text-align:center;">WATCHリストは空です</div>';
+
+  engageBody.innerHTML = engage.length > 0
+    ? engage.map(p => buildPeopleCard(p, 'engage')).join('')
+    : '<div style="color:var(--white3);font-size:12px;padding:32px;text-align:center;">まだ絡んだ記録がありません</div>';
+
+  similarBody.innerHTML = similar.length > 0
+    ? similar.map(p => buildPeopleCard(p, 'similar')).join('')
+    : '<div style="color:var(--white3);font-size:12px;padding:32px;text-align:center;">競合アカウントは未登録です</div>';
+}
+
+// ---- PEOPLE ロード ----
+async function loadPeople() {
+  try {
+    const res = await fetch('/api/people');
+    const data = await res.json();
+    renderPeople(data);
+  } catch (e) {
+    console.error('people load error', e);
+  }
+}
+
+// ---- アカウント分析 ----
+async function analyzeAccount(account) {
+  const analysisEl = document.getElementById('ppl-analysis-' + account);
+  if (!analysisEl) return;
+  analysisEl.innerHTML = '<div style="color:var(--white3);font-size:11px;padding:8px 0">分析中...</div>';
+  analysisEl.classList.add('open');
+
+  // X APIでツイート取得は現状スキップ（Free Tier制限）→ 空配列で分析
+  try {
+    const res = await fetch('/api/people/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ account, tweets: [] }),
+    });
+    const data = await res.json();
+    if (data.success && data.analysis) {
+      const a = data.analysis;
+      analysisEl.innerHTML = '<strong>バズパターン：</strong>' + escHtml(a.buzz_pattern || '—') + '<br>'
+        + '<strong>頻出型：</strong>' + escHtml((a.top_types || []).join(' / ') || '—') + '<br>'
+        + '<strong>頻出語：</strong>' + escHtml((a.keywords || []).join('・') || '—') + '<br>'
+        + (a.sample_post ? '<div style="margin-top:8px;padding:8px;border:1px solid var(--border);border-radius:4px;font-style:italic">"' + escHtml(a.sample_post) + '"</div>' : '')
+        + '<div style="margin-top:10px"><button class="btn" style="color:var(--green);border-color:rgba(200,240,74,0.3)" onclick="reflectInsights()">全エージェントに反映</button></div>';
+    } else {
+      analysisEl.innerHTML = '<div style="color:var(--red);font-size:11px">分析失敗: ' + escHtml(data.error || '不明') + '</div>';
+    }
+  } catch (e) {
+    analysisEl.innerHTML = '<div style="color:var(--red);font-size:11px">エラー: ' + escHtml(e.message) + '</div>';
+  }
+}
+
+// ---- 全エージェントに反映 ----
+async function reflectInsights() {
+  try {
+    const res = await fetch('/api/people/reflect', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      alert(`✓ ${data.count}件の分析データを全エージェントに反映しました`);
+    }
+  } catch (e) {
+    alert('反映失敗: ' + e.message);
+  }
+}
+
+// ---- 絡んだ記録 ----
+async function markEngaged(account) {
+  alert(`${account} との絡みを記録しました（engage_log.json は poster.js で自動記録）`);
+}
+
+function markFollowed(account) {
+  alert(`${account} をフォロー済みとしてマーク`);
+}
+
+// ---- API残量表示（B-3）----
+async function loadApiStatus() {
+  try {
+    const res = await fetch('/api/status');
+    const data = await res.json();
+    const wrap = document.getElementById('h-api-status');
+    const anthropicEl = document.getElementById('api-anthropic');
+    const xEl = document.getElementById('api-x');
+    if (!wrap || !anthropicEl || !xEl) return;
+
+    // Anthropic残高
+    const balance = data.anthropic?.balance;
+    if (balance != null) {
+      const b = parseFloat(balance);
+      anthropicEl.textContent = '$' + b.toFixed(2);
+      anthropicEl.className = 'api-item' + (b <= 3 ? ' warn' : b <= 0 ? ' err' : ' ok');
+    } else {
+      anthropicEl.textContent = '$—';
+    }
+
+    // X API残量
+    const xRemain = data.x?.posts_remaining;
+    if (xRemain != null) {
+      xEl.textContent = 'X ' + xRemain;
+      xEl.className = 'api-item' + (xRemain <= 200 ? ' warn' : xRemain <= 0 ? ' err' : ' ok');
+    } else {
+      xEl.textContent = 'X —';
+    }
+
+    wrap.style.display = 'flex';
+  } catch {
+    // スキップ
+  }
+}
+
 // ---- 初期ロード ----
 async function loadAll() {
   updateHeaderDate();
@@ -1684,6 +1999,7 @@ async function loadAll() {
     console.error('load error', e);
   }
   await loadIntel();
+  loadApiStatus();
 }
 
 // ---- 日次リセット ----
