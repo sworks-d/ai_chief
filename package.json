@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "server": "node server.js",
+    "ui": "node server.js",
+    "tunnel": "ngrok http 3001",
     "test:researcher": "node agents/researcher.js --test",
     "test:fact_checker": "node agents/fact_checker.js --test",
     "test:writer": "node agents/writer.js --test",

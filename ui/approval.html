@@ -1081,43 +1081,79 @@ function useIntel(btn) {
   btn.disabled = true;
 }
 
+// ---- Intel カード HTML 生成 ----
+function buildIntelCard(item) {
+  const barClass = item.info_type === 'TYPE_C' ? 'i-bar-a'
+    : (item.info_type === 'TYPE_A' || item.freshness === 'A') ? 'i-bar-w'
+    : 'i-bar-b';
+  const freshTag = item.freshness === 'A' ? '<span class="tag t-a">🔥 初出</span>'
+    : item.freshness === 'B' ? '<span class="tag t-a">新着</span>'
+    : item.freshness === 'C' ? '<span class="tag t-r">⚠ バズ</span>' : '';
+  const trustTag = item.trust === 'HIGH' ? '<span class="tag t-g">HIGH</span>'
+    : item.trust === 'MID' ? '<span class="tag t-b">MID</span>' : '';
+  const layerTag = item.layer ? '<span class="tag t-w">' + escHtml(item.layer) + '</span>' : '';
+  const noteClass = item.info_type === 'TYPE_C' ? 'i-note i-note-a'
+    : item.layer === 'MACRO' ? 'i-note i-note-b' : 'i-note';
+  const btnLabel = item.info_type === 'TYPE_C' ? '+ 両論で使う' : '+ 投稿に使う';
+  return '<div class="intel">'
+    + '<div class="i-bar ' + barClass + '"></div>'
+    + '<div class="i-inner">'
+    + '<div class="i-top">'
+    + '<div class="i-title">' + escHtml(item.title) + '</div>'
+    + '<div class="tags">' + freshTag + trustTag + layerTag + '</div>'
+    + '</div>'
+    + '<div class="i-body">' + escHtml(item.summary_ja || '') + '</div>'
+    + '<div class="' + noteClass + '">→ ' + escHtml(item.post_hint || '') + '</div>'
+    + '<div class="i-actions">'
+    + '<button class="btn btn-use" onclick="useIntel(this)">' + btnLabel + '</button>'
+    + '<button class="btn">skip</button>'
+    + '</div>'
+    + '</div>'
+    + '</div>';
+}
+
+// ---- Intel 展開トグル ----
+function toggleIntelAll() {
+  const allDiv = document.getElementById('intel-all');
+  const btn = document.getElementById('intel-more-btn');
+  if (!allDiv || !btn) return;
+  const isOpen = allDiv.style.display !== 'none';
+  allDiv.style.display = isOpen ? 'none' : 'block';
+  const count = allDiv.querySelectorAll('.intel').length;
+  btn.innerHTML = isOpen
+    ? '<span class="layer-label">すべて見る ▼ (' + count + '件)</span><span class="chevron"></span>'
+    : '<span class="layer-label">閉じる ▲</span><span class="chevron"></span>';
+}
+
 // ---- Intel パネル描画 ----
 function renderIntel(data) {
   const body = document.getElementById('intel-body');
-  const items = [...(data.featured || []), ...(data.caution || [])];
-  if (items.length === 0) {
+  const featured = data.featured || [];
+  const all = data.all || [];
+
+  if (featured.length === 0 && all.length === 0) {
     body.innerHTML = '<div style="color:var(--white3);font-size:12px;padding:32px;text-align:center;">今日のインプットはまだありません</div>';
     return;
   }
-  body.innerHTML = items.map(item => {
-    const barClass = item.info_type === 'TYPE_C' ? 'i-bar-a'
-      : (item.info_type === 'TYPE_A' || item.freshness === 'A') ? 'i-bar-w'
-      : 'i-bar-b';
-    const freshTag = item.freshness === 'A' ? '<span class="tag t-a">🔥 初出</span>'
-      : item.freshness === 'B' ? '<span class="tag t-a">新着</span>'
-      : item.freshness === 'C' ? '<span class="tag t-r">⚠ バズ</span>' : '';
-    const trustTag = item.trust === 'HIGH' ? '<span class="tag t-g">HIGH</span>'
-      : item.trust === 'MID' ? '<span class="tag t-b">MID</span>' : '';
-    const layerTag = item.layer ? '<span class="tag t-w">' + escHtml(item.layer) + '</span>' : '';
-    const noteClass = item.info_type === 'TYPE_C' ? 'i-note i-note-a'
-      : item.layer === 'MACRO' ? 'i-note i-note-b' : 'i-note';
-    const btnLabel = item.info_type === 'TYPE_C' ? '+ 両論で使う' : '+ 投稿に使う';
-    return '<div class="intel">'
-      + '<div class="i-bar ' + barClass + '"></div>'
-      + '<div class="i-inner">'
-      + '<div class="i-top">'
-      + '<div class="i-title">' + escHtml(item.title) + '</div>'
-      + '<div class="tags">' + freshTag + trustTag + layerTag + '</div>'
+
+  // 注目（featured）カード
+  let html = featured.map(item => buildIntelCard(item)).join('');
+
+  // 残り（featured以外の全件）
+  const featTitles = new Set(featured.map(f => f.title));
+  const rest = all.filter(i => !featTitles.has(i.title));
+
+  if (rest.length > 0) {
+    html += '<div class="p-layer-toggle" id="intel-more-btn" onclick="toggleIntelAll()" style="margin:4px 0 0">'
+      + '<span class="layer-label">すべて見る ▼ (' + rest.length + '件)</span>'
+      + '<span class="chevron"></span>'
       + '</div>'
-      + '<div class="i-body">' + escHtml(item.summary_ja || '') + '</div>'
-      + '<div class="' + noteClass + '">→ ' + escHtml(item.post_hint || '') + '</div>'
-      + '<div class="i-actions">'
-      + '<button class="btn btn-use" onclick="useIntel(this)">' + btnLabel + '</button>'
-      + '<button class="btn">skip</button>'
-      + '</div>'
-      + '</div>'
+      + '<div id="intel-all" style="display:none">'
+      + rest.map(item => buildIntelCard(item)).join('')
       + '</div>';
-  }).join('');
+  }
+
+  body.innerHTML = html;
 }
 
 // ---- プラットフォーム切替 ----

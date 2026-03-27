@@ -52,11 +52,10 @@ app.get('/api/research', (req, res) => {
   const checkedFile = path.join(DATA_DIR, 'checked', `${today}.json`);
   const items = readJSON(checkedFile);
 
-  // 承認UIに表示する形式に変換
   const featured = items.filter(i => i.is_featured).slice(0, 3);
-  const caution = items.filter(i => i.info_type === 'TYPE_C').slice(0, 5);
+  const all = items.filter(i => i.info_type !== 'NG');
 
-  res.json({ featured, caution, total: items.length });
+  res.json({ featured, all, total: items.length });
 });
 
 // ============================
@@ -399,8 +398,11 @@ app.get('/', (req, res) => {
 
 // サーバー起動
 app.listen(PORT, () => {
-  console.log(`[Server] 承認UIサーバー起動 - http://localhost:${PORT}`);
-  console.log(`[Server] スマホからのアクセス: http://[PCのIPアドレス]:${PORT}`);
+  console.log('=================================');
+  console.log('S — BRIEF が起動しました');
+  console.log(`ローカル：http://localhost:${PORT}`);
+  console.log('外部アクセス → 別ターミナルで: npm run tunnel');
+  console.log('=================================');
 });
 
 module.exports = app;
