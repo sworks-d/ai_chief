@@ -280,6 +280,30 @@ app.get('/api/queue/all', (req, res) => {
 });
 
 /**
+ * PATCH /api/queue/:id
+ * 投稿のプラットフォームを切り替え（X ↔ Threads）
+ */
+app.patch('/api/queue/:id', (req, res) => {
+  const { platform } = req.body;
+  if (!['X', 'Threads'].includes(platform)) {
+    return res.status(400).json({ error: 'platformはX/Threadsのみ有効' });
+  }
+
+  const today = getToday();
+  const queueFile = path.join(DATA_DIR, 'queue', `${today}.json`);
+  const queue = readJSON(queueFile);
+
+  const idx = queue.findIndex(p => p.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: '投稿が見つかりません' });
+
+  queue[idx].platform = platform;
+  writeJSON(queueFile, queue);
+
+  console.log(`[Server] プラットフォーム変更: ${req.params.id} → ${platform}`);
+  res.json({ success: true, platform });
+});
+
+/**
  * DELETE /api/queue/:id
  * 投稿をキューから削除
  */

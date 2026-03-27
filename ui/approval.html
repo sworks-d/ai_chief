@@ -1120,6 +1120,28 @@ function renderIntel(data) {
   }).join('');
 }
 
+// ---- プラットフォーム切替 ----
+async function togglePlatform(postId) {
+  const el = document.getElementById('post-' + postId);
+  if (!el) return;
+  const badge = el.querySelector('.platform');
+  const isX = badge.classList.contains('px');
+  const newPlatform = isX ? 'Threads' : 'X';
+  try {
+    const res = await fetch('/api/queue/' + encodeURIComponent(postId), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ platform: newPlatform }),
+    });
+    if (!res.ok) throw new Error('API error');
+    badge.classList.toggle('px', !isX);
+    badge.classList.toggle('pt', isX);
+    badge.textContent = newPlatform === 'X' ? 'X' : 'THREADS';
+  } catch (e) {
+    console.error('platform toggle failed', e);
+  }
+}
+
 // ---- タブ切替 ----
 function switchQTab(tab) {
   ['pending','approved'].forEach(t => {
@@ -1177,7 +1199,7 @@ function renderQueue(posts) {
     const c = buildPostCard(post, pid);
     return '<div class="post" id="post-' + pid + '">'
       + '<div class="p-head">'
-      + '<span class="platform ' + c.platformClass + '">' + c.platformLabel + '</span>'
+      + '<span class="platform ' + c.platformClass + '" style="cursor:pointer" title="クリックでX/Threads切替" onclick="togglePlatform(\'' + pid + '\')">' + c.platformLabel + '</span>'
       + '<div class="tags">' + c.postTypeTag + c.themeTag + c.charTag + c.threadTag + '</div>'
       + '<span class="score">' + c.score + '</span>'
       + '</div>'
