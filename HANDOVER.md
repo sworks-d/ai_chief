@@ -87,3 +87,67 @@ node agents/analyst.js --test
 | 土曜問いかけ投稿 | ✅ |
 | 週の投稿密度設計 | ❌ Phase 2 |
 | フィードバックループ | ❌ 未実装 |
+
+---
+
+## 別PCへの引き継ぎ・外部ネットワークアクセス設定
+
+### 別PCでの環境構築
+doc/00_new_mac_setup.md に全手順あり。要約：
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+source ~/.zshrc && nvm install --lts
+git clone https://github.com/sworks-d/ai_news.git
+cd ai_news && npm install
+touch .env && open .env   # 元のMacからキーをコピー
+sudo pmset -c sleep 0     # スリープ無効化
+node index.js             # 起動
+```
+
+---
+
+### 外部ネットワーク（5G・外出先）からUIにアクセスする
+
+ngrokを使う。
+
+```bash
+# 初回のみ：インストール・認証
+brew install ngrok
+# https://ngrok.com でSign up → Auth tokenをコピー
+ngrok config add-authtoken ここにトークンを貼る
+
+# 毎朝の起動手順
+# ターミナル1：
+node index.js
+
+# ターミナル2：
+ngrok http 3001
+# → https://xxxx.ngrok-free.app が発行される
+# → このURLをスマホで開けば5GからでもUIにアクセスできる
+```
+
+制限（無料プラン）：
+- URLが毎回変わる（毎朝コピーが必要）
+- 月40時間まで
+
+Proプラン（月$10）で固定URLになる。
+
+---
+
+### package.jsonのscriptsを以下に更新してほしい
+
+```json
+"scripts": {
+  "start": "node index.js",
+  "ui": "node server.js",
+  "tunnel": "ngrok http 3001"
+}
+```
+
+npm start → 本番起動
+npm run ui → UIのみ（テスト用）
+npm run tunnel → ngrok起動（別ターミナルで）
+
+完了したらgit pushしてください。
