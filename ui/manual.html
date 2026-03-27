@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>余白のAI — 使い方ガイド</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --black: #0a0a0a;
+  --black2: #111111;
+  --black3: #181818;
+  --black4: #222222;
+  --white: #f5f2ed;
+  --white2: #a0a09a;
+  --white3: #555550;
+  --white4: #2a2a28;
+  --green: #c8f04a;
+  --red: #ff3c3c;
+  --amber: #f0960a;
+  --blue: #5090f0;
+  --border: rgba(245,242,237,0.08);
+  --border2: rgba(245,242,237,0.16);
+  --display: 'Bebas Neue', sans-serif;
+  --sans: 'Noto Sans JP', sans-serif;
+  --mono: 'IBM Plex Mono', monospace;
+}
+
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--sans);
+  min-height: 100vh;
+  line-height: 1.7;
+}
+
+/* ── HEADER ── */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 56px;
+  background: var(--black);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+}
+
+.h-logo {
+  font-family: var(--display);
+  font-size: 28px;
+  letter-spacing: 0.06em;
+  color: var(--white);
+  line-height: 1;
+  text-decoration: none;
+}
+
+.h-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--white3);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.h-back {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--white3);
+  text-decoration: none;
+  letter-spacing: 0.08em;
+  border: 1px solid var(--border2);
+  padding: 5px 12px;
+  border-radius: 100px;
+  transition: all 0.15s;
+}
+
+.h-back:hover { color: var(--white); border-color: var(--white); }
+
+/* ── LAYOUT ── */
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+/* ── HERO ── */
+.hero {
+  margin-bottom: 60px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 40px;
+}
+
+.hero-tag {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--green);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.hero-title {
+  font-family: var(--display);
+  font-size: 52px;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  color: var(--white);
+  margin-bottom: 16px;
+}
+
+.hero-desc {
+  font-size: 14px;
+  color: var(--white2);
+  line-height: 1.8;
+  max-width: 560px;
+}
+
+/* ── SECTION ── */
+.section {
+  margin-bottom: 56px;
+}
+
+.section-num {
+  font-family: var(--display);
+  font-size: 80px;
+  color: var(--black3);
+  line-height: 1;
+  margin-bottom: -20px;
+  letter-spacing: 0.03em;
+}
+
+.section-title {
+  font-family: var(--display);
+  font-size: 28px;
+  letter-spacing: 0.08em;
+  color: var(--white);
+  line-height: 1;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── TIMELINE ── */
+.timeline {
+  position: relative;
+  padding-left: 24px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: var(--border2);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 32px;
+  animation: fadeIn 0.4s ease both;
+}
+
+.timeline-item:nth-child(1) { animation-delay: 0.05s; }
+.timeline-item:nth-child(2) { animation-delay: 0.1s; }
+.timeline-item:nth-child(3) { animation-delay: 0.15s; }
+.timeline-item:nth-child(4) { animation-delay: 0.2s; }
+.timeline-item:nth-child(5) { animation-delay: 0.25s; }
+.timeline-item:nth-child(6) { animation-delay: 0.3s; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -28px;
+  top: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--black2);
+  border: 1px solid var(--border2);
+}
+
+.timeline-item.active::before {
+  background: var(--green);
+  border-color: var(--green);
+  box-shadow: 0 0 8px rgba(200,240,74,0.4);
+}
+
+.tl-time {
+  font-family: var(--display);
+  font-size: 18px;
+  letter-spacing: 0.1em;
+  color: var(--green);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.tl-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--white);
+  margin-bottom: 6px;
+}
+
+.tl-desc {
+  font-size: 12px;
+  color: var(--white2);
+  line-height: 1.7;
+}
+
+.tl-auto {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--white3);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: 100px;
+  margin-left: 6px;
+  letter-spacing: 0.06em;
+}
+
+.tl-manual {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--green);
+  border: 1px solid rgba(200,240,74,0.3);
+  padding: 1px 6px;
+  border-radius: 100px;
+  margin-left: 6px;
+  letter-spacing: 0.06em;
+}
+
+/* ── STEPS ── */
+.steps {
+  counter-reset: step;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.step-num {
+  counter-increment: step;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--display);
+  font-size: 20px;
+  color: var(--white2);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.step-num::before {
+  content: counter(step);
+}
+
+.step.highlight .step-num {
+  border-color: rgba(200,240,74,0.4);
+  color: var(--green);
+  background: rgba(200,240,74,0.04);
+}
+
+.step-body {}
+
+.step-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--white);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.step-desc {
+  font-size: 12px;
+  color: var(--white2);
+  line-height: 1.7;
+}
+
+.step-code {
+  margin-top: 8px;
+  background: var(--black3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--green);
+  letter-spacing: 0.04em;
+  line-height: 1.8;
+}
+
+.step-note {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--white3);
+  padding-left: 10px;
+  border-left: 2px solid var(--border2);
+  line-height: 1.6;
+}
+
+/* ── PANEL CARDS ── */
+.panels {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .panels { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+.panel-card {
+  border: 1px solid var(--border);
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.panel-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+
+.panel-card.input::before { background: var(--blue); }
+.panel-card.queue::before { background: var(--green); }
+.panel-card.data::before { background: var(--amber); }
+
+.panel-name {
+  font-family: var(--display);
+  font-size: 22px;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+
+.panel-card.input .panel-name { color: var(--blue); }
+.panel-card.queue .panel-name { color: var(--green); }
+.panel-card.data .panel-name { color: var(--amber); }
+
+.panel-role {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.panel-desc {
+  font-size: 11px;
+  color: var(--white2);
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+
+.panel-features {
+  list-style: none;
+}
+
+.panel-features li {
+  font-size: 11px;
+  color: var(--white3);
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.panel-features li:last-child { border-bottom: none; }
+
+.panel-features li::before {
+  content: '→';
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--white4);
+  flex-shrink: 0;
+}
+
+/* ── TROUBLE TABLE ── */
+.trouble-table {
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.trouble-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  border-bottom: 1px solid var(--border);
+}
+
+.trouble-row:last-child { border-bottom: none; }
+
+.trouble-q {
+  padding: 14px 16px;
+  font-size: 12px;
+  color: var(--white);
+  font-weight: 500;
+  border-right: 1px solid var(--border);
+  background: var(--black2);
+  line-height: 1.5;
+}
+
+.trouble-a {
+  padding: 14px 16px;
+  font-size: 11px;
+  color: var(--white2);
+  line-height: 1.7;
+}
+
+.trouble-a code {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--green);
+  background: var(--black3);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* ── EXPAND SETUP ── */
+.setup-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .setup-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.setup-card {
+  border: 1px solid var(--border);
+  padding: 16px;
+}
+
+.setup-card-title {
+  font-family: var(--display);
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  color: var(--white);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  font-family: var(--mono);
+  font-size: 8px;
+  padding: 2px 7px;
+  border-radius: 100px;
+  border: 1px solid;
+  letter-spacing: 0.06em;
+}
+
+.badge-new { color: var(--green); border-color: rgba(200,240,74,0.3); }
+.badge-env { color: var(--amber); border-color: rgba(240,150,10,0.3); }
+
+.setup-steps {
+  list-style: none;
+}
+
+.setup-steps li {
+  font-size: 12px;
+  color: var(--white2);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  line-height: 1.5;
+}
+
+.setup-steps li:last-child { border-bottom: none; }
+
+.setup-step-num {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--white3);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── MONTHLY ── */
+.monthly-grid {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 0;
+  border: 1px solid var(--border);
+}
+
+.monthly-label {
+  background: var(--black2);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 12px;
+  font-family: var(--display);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: var(--white3);
+  display: flex;
+  align-items: center;
+}
+
+.monthly-content {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--white2);
+  line-height: 1.7;
+}
+
+.monthly-label:last-of-type,
+.monthly-content:last-of-type { border-bottom: none; }
+
+/* ── DIVIDER ── */
+.div-line {
+  height: 1px;
+  background: var(--border);
+  margin: 40px 0;
+}
+
+/* ── NOTE BOX ── */
+.note {
+  border: 1px solid rgba(200,240,74,0.2);
+  background: rgba(200,240,74,0.03);
+  padding: 14px 16px;
+  margin: 16px 0;
+}
+
+.note-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--green);
+  letter-spacing: 0.12em;
+  margin-bottom: 6px;
+}
+
+.note-text {
+  font-size: 12px;
+  color: var(--white2);
+  line-height: 1.7;
+}
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.footer-logo {
+  font-family: var(--display);
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  color: var(--white3);
+}
+
+.footer-links {
+  display: flex;
+  gap: 16px;
+}
+
+.footer-link {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--white3);
+  text-decoration: none;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 0.15s;
+}
+
+.footer-link:hover { color: var(--white); }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="h-logo" href="/">余白のAI</a>
+  <span class="h-label">使い方ガイド</span>
+  <a class="h-back" href="/">← ダッシュボードに戻る</a>
+</header>
+
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-tag">OPERATION GUIDE</div>
+    <div class="hero-title">使い方ガイド</div>
+    <p class="hero-desc">
+      このシステムはAIが情報収集・投稿生成・分析を自動で行い、<br>
+      Sが毎朝5〜10分だけ承認するだけで運用できる。<br>
+      横展開する時は、このガイドの手順通りに進めれば誰でも構築できる。
+    </p>
+  </div>
+
+  <!-- SECTION 1: 時間軸 -->
+  <div class="section">
+    <div class="section-num">01</div>
+    <div class="section-title">毎日の時間軸</div>
+
+    <div class="timeline">
+
+      <div class="timeline-item">
+        <div class="tl-time">05:00</div>
+        <div class="tl-title">リサーチャーが情報収集を開始 <span class="tl-auto">自動</span></div>
+        <div class="tl-desc">
+          AI・クリエイティブ・著作権・ツール情報を国内外から自動収集。<br>
+          毎日20件以上を3つのレイヤー（MACRO・MIDDLE・MICRO）に分類して保存する。
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-time">06:45</div>
+        <div class="tl-title">ファクトチェック → 投稿生成 <span class="tl-auto">自動</span></div>
+        <div class="tl-desc">
+          収集した情報の信頼度・鮮度を自動判定。<br>
+          Sのキャラクター・文体・型7つに基づいて今日の投稿を自動生成。<br>
+          品質スコア7.0未満は自動で弾かれ、高品質な投稿だけがキューに入る。
+        </div>
+      </div>
+
+      <div class="timeline-item active">
+        <div class="tl-time">07:00</div>
+        <div class="tl-title">Sが承認UIを開いて確認・承認 <span class="tl-manual">手動（5〜10分）</span></div>
+        <div class="tl-desc">
+          ダッシュボード（localhost:3001 または ngrok URL）を開く。<br>
+          INPUTパネルで今日の情報をチェック。<br>
+          QUEUEパネルで生成された投稿をOK/NG判断する。<br>
+          <strong>これだけが唯一の手作業。</strong>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-time">07:30</div>
+        <div class="tl-title">X（朝の投稿）自動投稿 <span class="tl-auto">自動</span></div>
+        <div class="tl-desc">
+          承認した投稿が時間帯スロットに従って自動でXに投稿される。<br>
+          承認していない場合はスキップされる（エラーにならない）。
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-time">21:00</div>
+        <div class="tl-title">X（夜の投稿）自動投稿 <span class="tl-auto">自動</span></div>
+        <div class="tl-desc">
+          夜のスロットで残りの承認済み投稿が自動投稿される。
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-time">深夜01:00</div>
+        <div class="tl-title">アナリストが今日のデータを分析 <span class="tl-auto">自動</span></div>
+        <div class="tl-desc">
+          投稿ごとのいいね・保存・インプレッションを集計。<br>
+          「なぜ伸びたか」の仮説を生成してログに記録。<br>
+          翌日のリサーチャー・ライターへのフィードバックを自動生成。
+        </div>
+      </div>
+
+    </div>
+
+    <div class="note">
+      <div class="note-label">WEEKLY</div>
+      <div class="note-text">
+        毎週月曜6:00：アナリストが週次分析を実行。承認UIのDATAパネルに表示される。
+        週次サマリーを読んで、伸びてる型・伸びてない型を把握する。（読むだけ・5分）
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SECTION 2: 毎朝の手順 -->
+  <div class="section">
+    <div class="section-num">02</div>
+    <div class="section-title">毎朝の手順（5〜10分）</div>
+
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <div class="step-title">PCが起動していることを確認する</div>
+          <div class="step-desc">自走PCの電源が入っているか確認。スリープになっていないか確認。</div>
+          <div class="step-note">node index.js が自動起動設定になっていれば確認不要。ターミナルで <code>ps aux | grep node</code> で確認できる。</div>
+        </div>
+      </div>
+
+      <div class="step highlight">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <div class="step-title">ダッシュボードを開く</div>
+          <div class="step-desc">スマホまたはPCのブラウザで以下を開く。</div>
+          <div class="step-code">
+            【同じWi-Fi内】 http://[PCのIPアドレス]:3001<br>
+            【外出先・5G】  ngrokで発行したURL（毎朝確認）
+          </div>
+          <div class="step-note">外出先からアクセスする場合は別ターミナルで <code>npm run tunnel</code> を実行してから開く。</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <div class="step-title">INPUTパネルを確認する（2〜3分）</div>
+          <div class="step-desc">今日リサーチャーが収集した情報を読む。「注目」タブの3件は必ず読む。気になったものは「+ 投稿に使う」を押す。後で読みたいものは「🔖 保存」を押す。</div>
+          <div class="step-note">すべて見るで20件全部確認できる。毎日全部読む必要はない。</div>
+        </div>
+      </div>
+
+      <div class="step highlight">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <div class="step-title">QUEUEの「未承認」タブで投稿をOK/NG判断する（3〜5分）</div>
+          <div class="step-desc">AIが生成した投稿が並んでいる。読んでOKなら「OK」、ダメなら「NG」を押すだけ。</div>
+          <div class="step-code">
+            OK → 自動でキューに追加・時間帯スロットで自動投稿される<br>
+            NG → 削除される（再生成はされない）<br>
+            ✎  → その場で本文を編集してから承認できる
+          </div>
+          <div class="step-note">3層構造（L1事実・L2解釈・L3有益性）を展開して根拠を確認してからOKを押すと安心。</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <div class="step-title">「承認済み」タブで投稿予定を確認する</div>
+          <div class="step-desc">今日何時に何本投稿されるかを確認する。修正したい場合は「編集」、削除したい場合は「削除」。急ぎで出したい場合は「今すぐ」ボタンで即時投稿できる。</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <div class="step-title">DATAパネルで昨日の数字を確認する（任意）</div>
+          <div class="step-desc">フォロワー数・保存率・インプレッションを確認。アナリストのコメントを読む。投稿履歴（HISTORY）で過去の投稿の反応を確認できる。</div>
+          <div class="step-note">毎日見る必要はない。週1回でも十分。</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 3: 各パネルの説明 -->
+  <div class="section">
+    <div class="section-num">03</div>
+    <div class="section-title">各パネルの役割</div>
+
+    <div class="panels">
+
+      <div class="panel-card input">
+        <div class="panel-name">INPUT</div>
+        <div class="panel-role">今日のインプット</div>
+        <div class="panel-desc">リサーチャーが毎朝5時に収集した情報の一覧。毎日自動で更新される。</div>
+        <ul class="panel-features">
+          <li>注目：信頼度・有益性が高い3件</li>
+          <li>すべて：全件表示（20件以上）</li>
+          <li>🔖 保存済み：ブックマークした記事</li>
+          <li>「+ 投稿に使う」でQUEUEに追加</li>
+          <li>日付が変わると自動リフレッシュ</li>
+        </ul>
+      </div>
+
+      <div class="panel-card queue">
+        <div class="panel-name">QUEUE</div>
+        <div class="panel-role">承認キュー</div>
+        <div class="panel-desc">AIが生成した投稿の一覧。OK/NGを判断する唯一の手作業の場所。</div>
+        <ul class="panel-features">
+          <li>未承認：OK/NGを判断するキュー</li>
+          <li>承認済み：投稿予定の一覧</li>
+          <li>編集・削除・即時投稿が可能</li>
+          <li>3層構造（L1/L2/L3）で根拠確認</li>
+          <li>ソース（媒体名・信頼度）を表示</li>
+        </ul>
+      </div>
+
+      <div class="panel-card data">
+        <div class="panel-name">DATA</div>
+        <div class="panel-role">数字・分析</div>
+        <div class="panel-desc">昨日の実績・アナリストの分析・投稿履歴を確認する場所。</div>
+        <ul class="panel-features">
+          <li>フォロワー・保存率・ENG率</li>
+          <li>今週のMVP投稿</li>
+          <li>アナリストのサマリー（5項目）</li>
+          <li>ターゲット人物像（CORE/GROW/WILD）</li>
+          <li>投稿履歴と各投稿の反応数</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 4: 外出先からのアクセス -->
+  <div class="section">
+    <div class="section-num">04</div>
+    <div class="section-title">外出先からのアクセス方法</div>
+
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <div class="step-title">ngrokをインストールする（初回のみ・2分）</div>
+          <div class="step-code">brew install ngrok</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <div class="step-title">ngrokアカウントを作成してAuth tokenを設定する（初回のみ・3分）</div>
+          <div class="step-desc">https://ngrok.com にアクセス → Sign up（無料）→ Auth tokenをコピー</div>
+          <div class="step-code">ngrok config add-authtoken [コピーしたトークン]</div>
+        </div>
+      </div>
+
+      <div class="step highlight">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <div class="step-title">毎朝：別ターミナルでngrokを起動する</div>
+          <div class="step-code">
+            # ターミナル1（本番システム）<br>
+            npm start<br><br>
+            # ターミナル2（外部アクセス用）<br>
+            npm run tunnel
+          </div>
+          <div class="step-desc">ngrokが起動すると以下のようなURLが発行される：</div>
+          <div class="step-code">Forwarding: https://xxxx-xxx.ngrok-free.app → http://localhost:3001</div>
+          <div class="step-note">このURLをスマホのブラウザで開けば5GでもどこからでもUIにアクセスできる。URLは起動するたびに変わるので毎朝コピーが必要。</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="note">
+      <div class="note-label">UPGRADE TIP</div>
+      <div class="note-text">
+        ngrokのProプラン（月$10）にすると固定URLが使える。<br>
+        例：https://s-brief.ngrok.io → スマホにブックマークすれば毎朝URLを確認する手間がなくなる。
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SECTION 5: 横展開の手順 -->
+  <div class="section">
+    <div class="section-num">05</div>
+    <div class="section-title">別のアカウントに横展開する手順</div>
+
+    <p style="font-size:13px;color:var(--white2);margin-bottom:24px;line-height:1.8;">
+      このシステムはナレッジファイルを差し替えるだけで別のジャンル・別のキャラクターに展開できる設計になっている。<br>
+      コードは一切触らない。
+    </p>
+
+    <div class="setup-grid">
+
+      <div class="setup-card">
+        <div class="setup-card-title">
+          新しいアカウントを追加する
+          <span class="badge badge-new">NEW ACCOUNT</span>
+        </div>
+        <ul class="setup-steps">
+          <li><span class="setup-step-num">1</span>GitHubからリポジトリをcloneする</li>
+          <li><span class="setup-step-num">2</span>knowledge/フォルダのmdファイルを新しいキャラクター・ジャンルに書き換える</li>
+          <li><span class="setup-step-num">3</span>doc/03_knowledge.md のキャラクター・ターゲット・型を更新する</li>
+          <li><span class="setup-step-num">4</span>doc/10_active_rules.md を新しいアカウント用にリセットする</li>
+          <li><span class="setup-step-num">5</span>新しいX APIキーを取得して.envに設定する</li>
+          <li><span class="setup-step-num">6</span>npm start で起動して動作確認</li>
+        </ul>
+      </div>
+
+      <div class="setup-card">
+        <div class="setup-card-title">
+          別PCで環境を構築する
+          <span class="badge badge-env">NEW PC</span>
+        </div>
+        <ul class="setup-steps">
+          <li><span class="setup-step-num">1</span><code>curl -fsSL https://claude.ai/install.sh | bash</code> でClaude Codeをインストール</li>
+          <li><span class="setup-step-num">2</span>nvmでNode.js LTS版をインストール</li>
+          <li><span class="setup-step-num">3</span><code>git clone https://github.com/sworks-d/ai_news.git</code></li>
+          <li><span class="setup-step-num">4</span><code>npm install</code> でパッケージをインストール</li>
+          <li><span class="setup-step-num">5</span>.envファイルを作成してAPIキーをコピー</li>
+          <li><span class="setup-step-num">6</span>スリープを無効化して <code>npm start</code> で起動</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="note" style="margin-top:16px">
+      <div class="note-label">IMPORTANT</div>
+      <div class="note-text">
+        .envファイルはGitに含まれていない。元のPCから手動でコピーすること。<br>
+        <code>cat ~/ai_news/.env</code> で内容を確認して新しいPCの.envに貼り付ける。
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SECTION 6: 月次チューニング -->
+  <div class="section">
+    <div class="section-num">06</div>
+    <div class="section-title">月1回のチューニング（10分）</div>
+
+    <div class="monthly-grid">
+
+      <div class="monthly-label">STEP 1</div>
+      <div class="monthly-content">
+        承認UIのDATAパネルを開いて、アナリストの月次サマリーを読む。<br>
+        「今月伸びた型」「伸びなかった型」「新しいターゲット層」を把握する。（3分）
+      </div>
+
+      <div class="monthly-label">STEP 2</div>
+      <div class="monthly-content">
+        doc/10_active_rules.md をテキストエディタで開いて更新する。<br>
+        「投稿の型の優先順位」「テーマのバランス」「禁止ワード」などを実績に合わせて変更する。（5分）
+      </div>
+
+      <div class="monthly-label">STEP 3</div>
+      <div class="monthly-content">
+        変更理由をdoc/09_tuning_history.mdに記録する。（1分）<br>
+        <code>git add . && git commit -m "月次チューニング YYYY-MM" && git push</code>
+      </div>
+
+      <div class="monthly-label">STEP 4</div>
+      <div class="monthly-content">
+        翌日からClaude Codeが更新されたルールで動き始める。<br>
+        追加コストゼロ。エンジニアへの依頼不要。GitHubにpushするだけで反映される。
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 7: トラブルシューティング -->
+  <div class="section">
+    <div class="section-num">07</div>
+    <div class="section-title">トラブルシューティング</div>
+
+    <div class="trouble-table">
+
+      <div class="trouble-row">
+        <div class="trouble-q">投稿が生成されない</div>
+        <div class="trouble-a">
+          writer.jsを手動で実行して確認する：<code>node agents/writer.js</code><br>
+          エラーが出る場合はANTHROPIC_API_KEYが.envに正しく設定されているか確認する。<br>
+          コンソールでAPIの残高も確認すること：https://console.anthropic.com/settings/billing
+        </div>
+      </div>
+
+      <div class="trouble-row">
+        <div class="trouble-q">UIが開かない（localhost:3001）</div>
+        <div class="trouble-a">
+          node index.jsが動いているか確認する：<code>ps aux | grep node</code><br>
+          動いていない場合は再起動する：<code>npm start</code><br>
+          3001ポートが使われている場合は：<code>lsof -i :3001</code> でプロセスを確認してkillする。
+        </div>
+      </div>
+
+      <div class="trouble-row">
+        <div class="trouble-q">X投稿がエラーになる</div>
+        <div class="trouble-a">
+          X APIキーが正しいか確認する：.envのX_API_KEY・X_ACCESS_TOKENを確認。<br>
+          アクセストークンの権限が「読み取りと書き込み」になっているか確認する：<br>
+          developer.twitter.com → アプリ → アクセストークン → 権限確認
+        </div>
+      </div>
+
+      <div class="trouble-row">
+        <div class="trouble-q">外部アクセスURLが繋がらない</div>
+        <div class="trouble-a">
+          ngrokが起動しているか確認する：<code>npm run tunnel</code> を別ターミナルで実行。<br>
+          URLは起動するたびに変わる。新しいURLをコピーしてスマホで開く。<br>
+          node index.js が先に起動していることを確認する。
+        </div>
+      </div>
+
+      <div class="trouble-row">
+        <div class="trouble-q">データをリセットしたい</div>
+        <div class="trouble-a">
+          投稿データ：<code>rm -rf data/posts/*</code><br>
+          メトリクスデータ：<code>rm -rf data/metrics/*</code><br>
+          フィードバックログ：doc/08_feedback_log.md の内容を手動で削除する。<br>
+          ※ .gitkeepファイルは削除しないこと。
+        </div>
+      </div>
+
+      <div class="trouble-row">
+        <div class="trouble-q">品質スコアが低くて投稿が生成されない</div>
+        <div class="trouble-a">
+          doc/10_active_rules.mdの品質スコアの閾値を一時的に下げる（7.0 → 6.5）。<br>
+          または writer.js を <code>--force</code> オプションで実行してスコアを無視する：<br>
+          <code>node agents/writer.js --force</code>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <span class="footer-logo">余白のAI</span>
+  <div class="footer-links">
+    <a class="footer-link" href="/">ダッシュボード</a>
+    <a class="footer-link" href="https://github.com/sworks-d/ai_news" target="_blank">GitHub</a>
+    <a class="footer-link" href="https://console.anthropic.com" target="_blank">Anthropic Console</a>
+    <a class="footer-link" href="https://developer.twitter.com" target="_blank">X Developer</a>
+  </div>
+</footer>
+
+</body>
+</html>
