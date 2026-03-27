@@ -3,7 +3,7 @@
 まずdoc/フォルダの全ファイルを読んでください。
 特にdoc/10_active_rules.md（最優先）を必ず読むこと。
 
-読み終わったら以下の現状を把握して、続きを実装してください。
+読み終わったら以下の現状を把握して、動作確認を優先して進めてください。
 
 ---
 
@@ -14,74 +14,107 @@
 - fact_checker.js：正常動作（軽微なパースエラーは自動スキップ）
 - writer.js：正常動作（品質スコア7.8〜8.2・Sのキャラクターが出ている）
 
-### 未対応
-- poster.js：テスト未完了（理由は下記）
+### 未確認・未対応
+- server.js（承認UI）：未起動
+- poster.js：テスト未完了
 - fetcher.js：テスト未完了
 - analyst.js：テスト未完了
-- server.js（承認UI）：起動未確認
 - モデル最適化：未適用
 - プロンプトキャッシュ：未実装
 - フィードバックループ：未実装
 
 ---
 
-## poster.jsについて判明したこと
+## 今回やること（動作確認を最優先）
 
-poster.jsのスロット設定が以下になっている：
+### 優先①：承認UIの起動・動作確認
+
+```bash
+node server.js
+```
+
+確認項目：
+- http://localhost:3000 でui/approval.htmlが表示されること
+- writer.jsが生成した投稿データがQUEUEパネルに表示されること
+- OK/NGボタンが動作してキューに反映されること
+
+⚠️ ui/approval.htmlは変更しない（デザイン完成済み）
+⚠️ server.jsとui/approval.htmlのデータ連携だけ実装する
+
+---
+
+### 優先②：poster.jsの動作確認（Xへの投稿テスト）
+
+以下の修正をしてからテストする：
+
+1. poster.jsに「--force」フラグを追加（時間帯スロットを無視してテストできるように）
+2. Threads APIが.envに未設定の場合はXだけ投稿してスキップする（エラーにしない）
+
+```bash
+node agents/poster.js --force
+```
+
+---
+
+### 優先③：fetcher.jsの動作確認
+
+X APIのFree Tier制限でメトリクス取得がエラーになる場合は：
+- エラーログだけ残してスキップする
+- 投稿機能には影響しない設計にする
+
+---
+
+### 優先④：本番起動テスト
+
+上記が全部動いたら：
+
+```bash
+node index.js
+```
+
+全エージェントがcronで自動起動することを確認する。
+
+---
+
+### 優先⑤：①〜④が全部動いたら実装（後回しでOK）
+
+- モデル最適化（doc/07_model_cost.md参照）
+- プロンプトキャッシュ（writer.js・analyst.js）
+- フィードバックループ（analyst.js → doc/08_feedback_log.md自動追記）
+
+---
+
+## 既知の問題・注意事項
+
+### poster.jsのスロット問題
+poster.jsのスロット設定：
 - 7:00〜9:00   → Xのみ
 - 12:00〜14:00 → Threadsのみ
 - 21:00〜23:00 → X + Threads
 - その他       → X + Threads
 
-テストしたのが12:23だったため「Threadsのみ」のスロットになっていた。
-Threadsの.envが未設定のため投稿できず、エラーに見えていたが正常動作。
+Threadsの.envが未設定のため、Threadsスロットの時間帯はエラーになる。
+→ Threads未設定時はXだけ投稿する設計に変更すること。
 
-対応してほしいこと：
-1. poster.jsに「--force」フラグを追加して時間帯スロットを無視してテストできるようにする
-2. Threads APIが未設定の場合はXだけ投稿してスキップする（エラーにしない）
-3. fetcher.jsでメトリクス取得がFree Tier制限でエラーになった場合はログだけ残してスキップする
-
----
-
-## X APIについて
-
-現在のプラン：Free Tier
-制限：
+### X API Free Tier
 - 投稿（POST）：月1,500件 → 問題なし
-- メトリクス取得（GET）：制限あり → エラーになった場合はスキップする設計にする
+- メトリクス取得（GET）：制限あり → エラー時はスキップ
 
-X Developer Portalが現在障害中のため確認できていないが、
-投稿機能（poster.js）は動作するはず。
-
----
-
-## 今回やってほしいこと（優先順位順）
-
-### 1. server.jsを起動して承認UIの動作確認
-- ui/approval.htmlが表示されること（デザイン変更不要・完成済み）
-- writer.jsが生成した投稿データがQUEUEに表示されること
-- OK/NGボタンが動作してキューに反映されること
-
-### 2. poster.jsに--forceフラグを追加してXへの投稿テストを実施
-
-### 3. 上記が動いたら以下を実装
-- 各エージェントのモデルをdoc/07_model_cost.mdの設定に更新
-  - researcher.js・fact_checker.js・poster.js・fetcher.js → claude-haiku-4-5-20251001
-  - writer.js・analyst.js → claude-sonnet-4-6（変更なし）
-- writer.jsとanalyst.jsにプロンプトキャッシュを実装（knowledge/フォルダが対象）
-- analyst.jsに週次分析時にdoc/08_feedback_log.mdへ自動追記する機能を追加
-
-### 4. 全部完了したらgit push
-
----
-
-## 重要な注意事項
-
+### 共通ルール
 - ui/approval.htmlは変更しない（デザイン完成済み）
 - .envのAPIキーはコードに直書きしない
 - doc/10_active_rules.md > doc/03_knowledge.mdの優先順位を守る
-- Threads APIは.envが空なのでスキップする設計にする
 - エラーが出ても自分で修正して再実行する
+
+---
+
+## 全部完了したらgit push
+
+```bash
+git add .
+git commit -m "feat: working system — UI + poster + fetcher confirmed"
+git push origin main
+```
 
 ---
 
