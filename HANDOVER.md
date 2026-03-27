@@ -7,143 +7,83 @@
 
 ---
 
-## 現在の動作状況
+## 現在の動作状況（2026-03-27更新）
 
-### 動作確認済み
-- researcher.js：正常動作
-- fact_checker.js：正常動作（軽微なパースエラーは自動スキップ）
-- writer.js：正常動作（品質スコア7.8〜8.2・Sのキャラクターが出ている）
+### 動作確認済み ✅
+- researcher.js：正常動作（モデル: claude-haiku-4-5-20251001）
+- fact_checker.js：正常動作（モデル: claude-haiku-4-5-20251001）
+- writer.js：正常動作（SHORT/THREAD型判断・土曜問いかけ投稿・型優先順位⑤⑥⑦実装済み）
+- poster.js：正常動作（--force実装・スレッド投稿reply chaining対応済み）
+- fetcher.js：正常動作（Free Tier制限スキップ・エラーログ記録）
+- analyst.js：正常動作（メトリクスなし時スキップ）
+- server.js：正常動作（承認UI PORT=3001）
+- node index.js：正常動作（cronスケジュール + 承認UIサーバー同時起動）
+- X実投稿：成功済み https://twitter.com/i/web/status/2037376178789728549
 
-### 未確認・未対応
-- server.js（承認UI）：未起動
-- poster.js：テスト未完了
-- fetcher.js：テスト未完了
-- analyst.js：テスト未完了
-- モデル最適化：未適用
-- プロンプトキャッシュ：未実装
-- フィードバックループ：未実装
-
----
-
-## 今回やること（動作確認を最優先）
-
-### 優先①：承認UIの起動・動作確認
-
-```bash
-node server.js
-```
-
-確認項目：
-- http://localhost:3000 でui/approval.htmlが表示されること
-- writer.jsが生成した投稿データがQUEUEパネルに表示されること
-- OK/NGボタンが動作してキューに反映されること
-
-⚠️ ui/approval.htmlは変更しない（デザイン完成済み）
-⚠️ server.jsとui/approval.htmlのデータ連携だけ実装する
-
----
-
-### 優先②：poster.jsの動作確認（Xへの投稿テスト）
-
-以下の修正をしてからテストする：
-
-1. poster.jsに「--force」フラグを追加（時間帯スロットを無視してテストできるように）
-2. Threads APIが.envに未設定の場合はXだけ投稿してスキップする（エラーにしない）
-
-```bash
-node agents/poster.js --force
-```
-
----
-
-### 優先③：fetcher.jsの動作確認
-
-X APIのFree Tier制限でメトリクス取得がエラーになる場合は：
-- エラーログだけ残してスキップする
-- 投稿機能には影響しない設計にする
-
----
-
-### 優先④：本番起動テスト
-
-上記が全部動いたら：
-
-```bash
-node index.js
-```
-
-全エージェントがcronで自動起動することを確認する。
-
----
-
-### 優先⑤：①〜④が全部動いたら実装（後回しでOK）
-
+### 未実装（優先⑤以降）
 - モデル最適化（doc/07_model_cost.md参照）
 - プロンプトキャッシュ（writer.js・analyst.js）
 - フィードバックループ（analyst.js → doc/08_feedback_log.md自動追記）
+- 週の投稿密度設計（Phase 2・doc/10_active_rules.md参照）
+- Threads APIキー設定（.envに空欄のまま）
 
 ---
 
-## 既知の問題・注意事項
-
-### poster.jsのスロット問題
-poster.jsのスロット設定：
-- 7:00〜9:00   → Xのみ
-- 12:00〜14:00 → Threadsのみ
-- 21:00〜23:00 → X + Threads
-- その他       → X + Threads
-
-Threadsの.envが未設定のため、Threadsスロットの時間帯はエラーになる。
-→ Threads未設定時はXだけ投稿する設計に変更すること。
-
-### X API Free Tier
-- 投稿（POST）：月1,500件 → 問題なし
-- メトリクス取得（GET）：制限あり → エラー時はスキップ
-
-### 共通ルール
-- ui/approval.htmlは変更しない（デザイン完成済み）
-- .envのAPIキーはコードに直書きしない
-- doc/10_active_rules.md > doc/03_knowledge.mdの優先順位を守る
-- エラーが出ても自分で修正して再実行する
-
----
-
-## 全部完了したらgit push
+## 起動コマンド
 
 ```bash
-git add .
-git commit -m "feat: working system — UI + poster + fetcher confirmed"
-git push origin main
+cd /Users/a05/Documents/GitHub/ai_news
+
+# 本番起動（これだけでOK）
+node index.js
+# → http://localhost:3001 で承認UIが開く
+
+# 個別テスト
+node agents/researcher.js --test
+node agents/fact_checker.js --test
+node agents/writer.js --test
+node agents/poster.js --test     # テストモード（実投稿なし）
+node agents/poster.js --force    # 時間帯スキップして実投稿
+node agents/fetcher.js --test
+node agents/analyst.js --test
 ```
 
 ---
 
-## Xアカウント情報（確定）
+## 環境情報
 
-- アカウント名（表示名）：AIと余白
-- ユーザー名：@S_creative_AI
-- プロフィール文：
-  広告制作の現場でAIを使い続けてる。
-  うまく使えば、仕事に隙間ができる。
-  その隙間の作り方を、現場目線で書いてます。
-  プロンプト・ツール・ワークフロー / noteで詳しく。
+| 項目 | 値 |
+|---|---|
+| パス | /Users/a05/Documents/GitHub/ai_news |
+| ポート | 3001 |
+| Xアカウント | @S_creative_AI |
+| writer/analystモデル | claude-sonnet-4-6 |
+| researcher/fact_checkerモデル | claude-haiku-4-5-20251001 |
 
 ---
 
-## 追加設計（今回反映済み）
+## 既知の問題・対応済み
 
-doc/10_active_rules.mdに以下を追加した：
+| 問題 | 対応 |
+|---|---|
+| X APIのFree Tierでメトリクス取得不可 | fetcher.jsでスキップ＋errors_DATE.jsonに記録 |
+| analyst.jsがメトリクスなしでClaudeを呼ぶ | 空/全ゼロの場合はスキップ対応済み |
+| Xの日本語ツイートが280文字制限オーバー | writer.jsのX制限を140文字に修正・重み付きチェック追加 |
+| Claude APIがJSON不正形式を返す | fact_checkerはtry/catchで対処済み |
+| Threads APIは未設定 | poster.jsはXのみ投稿（Threadsはスキップ） |
+| THREAD型生成が品質スコア7.0未満になることあり | SHORT型にフォールバック済み |
 
-1. SHORT型・THREAD型の判断基準
-2. THREAD型の4投稿構成（フック→解決→証拠→誘導）
-3. 週の投稿密度設計（Phase 2で実装）
-4. 問いかけ投稿の設計（週1本・土曜）
-5. ソース明示・tips具体化ルール
-6. noteへの「一部だけ見せる」誘導設計
+---
 
-### ライターへの追加指示
+## doc/10_active_rules.mdの実装状況
 
-writer.jsでSHORT型・THREAD型を判断して生成すること：
-- SHORT型：通常通り1投稿を生成
-- THREAD型：4投稿をセットで生成してキューに追加
-- 土曜日は問いかけ投稿を1本生成する
+| ルール | 実装状況 |
+|---|---|
+| モデル設定（haiku/sonnet分離） | ✅ |
+| 品質スコア7.0未満は捨てる | ✅ |
+| 型⑤⑥⑦優先 | ✅ |
+| SHORT/THREAD型判断 | ✅ |
+| THREAD型4投稿セット生成 | ✅ |
+| 土曜問いかけ投稿 | ✅ |
+| 週の投稿密度設計 | ❌ Phase 2 |
+| フィードバックループ | ❌ 未実装 |
