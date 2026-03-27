@@ -145,6 +145,26 @@ cron.schedule('0 3 1 * *', async () => {
   await runAgent('アナリスト(月次)', () => analyst.main('monthly', false));
 }, { timezone: 'Asia/Tokyo' });
 
+/**
+ * 毎朝8:00 - ngrok URL をGmailに送信
+ */
+cron.schedule('0 8 * * *', async () => {
+  await runAgent('ngrok URL通知(8:00)', () => {
+    const mod = require('./scripts/send_ngrok_url');
+    return typeof mod === 'function' ? mod() : Promise.resolve();
+  });
+}, { timezone: 'Asia/Tokyo' });
+
+/**
+ * 毎朝9:30 - ngrok URL をGmailに再送信（念のため）
+ */
+cron.schedule('30 9 * * *', async () => {
+  await runAgent('ngrok URL通知(9:30)', () => {
+    const mod = require('./scripts/send_ngrok_url');
+    return typeof mod === 'function' ? mod() : Promise.resolve();
+  });
+}, { timezone: 'Asia/Tokyo' });
+
 console.log('\n[Scheduler] cronスケジュール設定完了');
 console.log('スケジュール一覧:');
 console.log('  05:00 - リサーチャー(MICRO毎日)');
@@ -152,6 +172,8 @@ console.log('  00:00 - リサーチャー(MIDDLE月水金 / MACRO日)');
 console.log('  06:30 - ファクトチェッカー');
 console.log('  06:45 - ライター');
 console.log('  07:30 - ポスター(朝枠・X)');
+console.log('  08:00 - ngrok URL通知(Gmail)');
+console.log('  09:30 - ngrok URL通知(Gmail・再送)');
 console.log('  13:00 - ポスター(昼枠・X)');
 console.log('  21:00 - ポスター(夜枠・X)');
 console.log('  毎時+5分 - フェッチャー(1h)');
