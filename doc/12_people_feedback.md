@@ -17,9 +17,77 @@
 
 ---
 
+## data/people_insights.jsonは「ジャンルの知識ベース」
+
+**ライターだけに使うのは誤り。全エージェントが参照するべきデータ。**
+
+```
+リサーチャー：
+WATCHリストのアカウントを情報収集のソースとして優先的に巡回する
+→ 影響力ある人が話題にしてる情報を最初に取る
+→ 「誰が注目してるか」が情報の価値を上げる
+
+ファクトチェッカー：
+WATCHリストのHIGH信頼アカウントが発信してる情報は
+信頼度をワンランク上げる
+→ 「誰が言ってるか」も信頼度の判断材料にする
+→ 公式発表と同等レベルで扱える場合がある
+
+アナリスト：
+絡んだ相手のプロフィールから
+「今Sのターゲット層の中で何が話題になってるか」を把握
+→ 週次分析でターゲット人物像を更新する材料にする
+→ 「誰に絡むとフォロワーが増えるか」の相関も分析する
+
+ライター：
+バズパターン・頻出キーワードを投稿生成に反映
+→ 「今刺さってる型・言葉・構造」を使う
+→ 初日から精度の高い投稿を生成できる
+```
+
+### 各エージェントへの反映方法
+
+**researcher.js：**
+```javascript
+// WATCHリストのアカウントをソースとして優先巡回
+const watchAccounts = loadPeopleInsights().watch;
+for (const account of watchAccounts) {
+  // そのアカウントの直近ツイートを情報源として追加
+  // 通常のソースと同じフォーマットでresearch結果に追加
+  // source_type: "PEOPLE_WATCH" として区別
+}
+```
+
+**fact_checker.js：**
+```javascript
+// HIGH信頼アカウントが発信してる情報は信頼度を上げる
+const highTrustAccounts = loadPeopleInsights()
+  .insights.filter(i => i.trust_level === 'HIGH')
+  .map(i => i.account);
+
+if (highTrustAccounts.includes(item.author)) {
+  item.trust = upgradeTrust(item.trust); // MID→HIGH等
+}
+```
+
+**analyst.js：**
+```javascript
+// 週次分析でpeople_insightsを参照
+// 「どのアカウントに絡んだ週にフォロワーが増えたか」を分析
+// ターゲット人物像の更新材料として使う
+```
+
+**writer.js：**
+```javascript
+// バズパターンをシステムプロンプトに追加
+// 最新5件のinsightsを参照
+```
+
+---
+
 ## 2層構造のFBループ
 
-### 層①：バズ投稿の構造分析 → writer.jsに直接反映（本質）
+### 層①：バズ投稿の構造分析 → 全エージェントに反映（本質）
 
 ```
 PEOPLEパネルで気になるアカウントを選ぶ
@@ -320,25 +388,48 @@ Phase 3（フォロワー500人以降）：
 
 ```
 doc/12_people_feedback.mdを読んでください。
-以下の優先順位で実装してください：
+以下の優先順位で実装してください。
+
+重要：
+data/people_insights.jsonはライターだけでなく
+全エージェントが参照する「ジャンルの知識ベース」です。
 
 【Phase 1】
+
 1. ui/approval.htmlにPEOPLEパネルを追加する
-   - 4つ目のパネルとして追加（PC：4カラム、スマホ：底部ナビにPEOPLEタブ追加）
+   - 4つ目のパネルとして追加（PC：4カラム・スマホ：底部ナビにPEOPLEタブ追加）
    - WATCH/ENGAGE/SIMILARの3タブ構成
-   - 各カードに「フォロー済」トグル・「絡んだ」ボタン
+   - 各カードに「フォロー済」トグル・「絡んだ」ボタン・「投稿を分析」ボタン
 
-2. server.jsに /api/people エンドポイントを追加する
-   - GET /api/people → data/people_cache.jsonを返す
-   - POST /api/people/engaged → 絡んだログを記録
+2. server.jsに以下のAPIエンドポイントを追加する
+   GET /api/people → data/people_cache.jsonを返す
+   POST /api/people/engaged → 絡んだログをdata/engage_log.jsonに記録
+   POST /api/people/analyze → アナリストにバズ投稿分析を依頼してdata/people_insights.jsonに保存
+   GET /api/status → Anthropic残高・X API残量を返す
 
-3. data/people_cache.jsonを初期データとして作成する
-   - AI×クリエイティブジャンルで影響力があるアカウントを5件
-   - WATCHに3件・SIMILARに2件
+3. data/people_cache.jsonを初期データとして手動作成する
+   AI×クリエイティブジャンルで影響力があるアカウントを5件
+   （WATCH：3件・SIMILAR：2件）
 
-4. ヘッダーにAPI残量を表示する
-   - GET /api/status エンドポイントを追加
-   - Anthropic残高・X API残量を表示
+4. 全エージェントにpeople_insights.jsonの参照を追加する：
+   researcher.js：
+     WATCHリストのアカウントをソースとして優先巡回する
+     source_type: "PEOPLE_WATCH"として通常のresearch結果に追加する
+
+   fact_checker.js：
+     HIGH信頼アカウントの発信情報は信頼度をワンランク上げる
+
+   analyst.js：
+     週次分析でengage_log.jsonを参照して
+     「絡んだアカウントのタイプとフォロワー増加の相関」を分析する
+     結果をdoc/08_feedback_log.mdに追記する
+
+   writer.js：
+     people_insights.jsonの最新5件をシステムプロンプトに追加する
+     「今バズってる型・キーワード」として参照する
+
+5. ヘッダーにAPI残量を表示する
+   「Anthropic $XX.XX | X残 XXX/1,500」
 
 デザインは既存のCSSを踏襲すること。
 完了したらgit pushしてください。
