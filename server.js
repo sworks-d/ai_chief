@@ -49,14 +49,21 @@ function writeJSON(filePath, data) {
  */
 app.get('/api/research', (req, res) => {
   const today = getToday();
-  const checkedFile = path.join(DATA_DIR, 'checked', `${today}.json`);
+  const date = req.query.date || today;
+  const checkedFile = path.join(DATA_DIR, 'checked', `${date}.json`);
   const items = readJSON(checkedFile);
 
   const featured = items.filter(i => i.is_featured).slice(0, 3);
   const caution = items.filter(i => i.info_type === 'TYPE_C');
-  const all = items.filter(i => i.info_type !== 'NG');
 
-  res.json({ featured, caution, all, total: items.length, date: today });
+  // all: is_featured=true を先頭に、残りをcollected_at新しい順
+  const featItems = items.filter(i => i.is_featured && i.info_type !== 'NG');
+  const restItems = items
+    .filter(i => !i.is_featured && i.info_type !== 'NG')
+    .sort((a, b) => new Date(b.collected_at || 0) - new Date(a.collected_at || 0));
+  const all = [...featItems, ...restItems];
+
+  res.json({ featured, caution, all, total: items.length, date });
 });
 
 // ============================

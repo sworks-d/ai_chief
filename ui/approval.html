@@ -878,6 +878,37 @@ header {
 }
 .p-posted-url a { color: var(--blue); text-decoration: none; }
 .p-posted-url a:hover { color: var(--white); }
+
+/* ── INTEL DATE NAV ── */
+.intel-date-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.idn-btn {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--white3);
+  border-radius: 100px;
+  padding: 4px 12px;
+  font-family: var(--mono);
+  font-size: 9px;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  transition: all 0.12s;
+}
+.idn-btn:hover:not(:disabled) { color: var(--white); border-color: var(--white); }
+.idn-btn:disabled { opacity: 0.3; cursor: default; }
+.idn-today {
+  flex: 1;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--white2);
+  letter-spacing: 0.1em;
+}
 </style>
 </head>
 <body>
@@ -900,16 +931,12 @@ header {
       <span class="panel-title">INPUT</span>
       <span class="panel-label">今日のインプット</span>
     </div>
-    <div class="q-tabs">
-      <div class="q-tab active" id="itab-today" onclick="switchIntelTab('today')">今日</div>
-      <div class="q-tab" id="itab-bookmarks" onclick="switchIntelTab('bookmarks')">🔖 保存済み</div>
+    <div class="intel-date-nav">
+      <button class="idn-btn" id="idn-prev" onclick="navIntelDate(-1)">← 昨日</button>
+      <span class="idn-today" id="idn-label">今日</span>
+      <button class="idn-btn" id="idn-next" onclick="navIntelDate(1)" disabled>→ 明日</button>
     </div>
-    <div class="q-panel active" id="ipanel-today">
-      <div class="panel-body" id="intel-body"></div>
-    </div>
-    <div class="q-panel" id="ipanel-bookmarks">
-      <div class="panel-body" id="bookmark-body"></div>
-    </div>
+    <div class="panel-body" id="intel-body"></div>
   </div>
 
   <!-- QUEUE -->
@@ -1113,25 +1140,6 @@ function toggleBookmark(btn, iid) {
     btn.style.color = '';
   }
   saveBookmarks(bms);
-  const bmPanel = document.getElementById('ipanel-bookmarks');
-  if (bmPanel && bmPanel.classList.contains('active')) renderBookmarks();
-}
-function renderBookmarks() {
-  const body = document.getElementById('bookmark-body');
-  if (!body) return;
-  const bms = getBookmarks();
-  if (bms.length === 0) {
-    body.innerHTML = '<div style="color:var(--white3);font-size:12px;padding:32px;text-align:center;">保存済みの記事はありません</div>';
-    return;
-  }
-  body.innerHTML = bms.map(item => buildIntelCard(item)).join('');
-}
-function switchIntelTab(tab) {
-  ['today','bookmarks'].forEach(t => {
-    document.getElementById('itab-' + t).classList.toggle('active', t === tab);
-    document.getElementById('ipanel-' + t).classList.toggle('active', t === tab);
-  });
-  if (tab === 'bookmarks') renderBookmarks();
 }
 
 // ---- Intel item storage ----
@@ -1144,8 +1152,8 @@ function buildIntelCard(item) {
   window._intelItems[iid] = item;
   const bms = getBookmarks();
   const isBookmarked = bms.some(b => b.title === item.title);
-  const barClass = item.info_type === 'TYPE_C' ? 'i-bar-a'
-    : (item.info_type === 'TYPE_A' || item.freshness === 'A') ? 'i-bar-w'
+  const barClass = item.is_featured ? 'i-bar-w'
+    : item.info_type === 'TYPE_C' ? 'i-bar-a'
     : 'i-bar-b';
   const freshTag = item.freshness === 'A' ? '<span class="tag t-a">🔥 初出</span>'
     : item.freshness === 'B' ? '<span class="tag t-a">新着</span>'
@@ -1153,18 +1161,26 @@ function buildIntelCard(item) {
   const trustTag = item.trust === 'HIGH' ? '<span class="tag t-g">HIGH</span>'
     : item.trust === 'MID' ? '<span class="tag t-b">MID</span>' : '';
   const layerTag = item.layer ? '<span class="tag t-w">' + escHtml(item.layer) + '</span>' : '';
+  const snsTag = (item.source_type === 'SNS' && item.buzz_level)
+    ? '<span class="tag t-a">𝕏 ' + escHtml(item.buzz_level) + '</span>' : '';
   const noteClass = item.info_type === 'TYPE_C' ? 'i-note i-note-a'
     : item.layer === 'MACRO' ? 'i-note i-note-b' : 'i-note';
   const btnLabel = item.info_type === 'TYPE_C' ? '+ 両論で使う' : '+ 投稿に使う';
   const bmStyle = isBookmarked ? ' style="color:var(--amber)"' : '';
   const bmLabel = isBookmarked ? '🔖 保存済み' : '🔖 保存';
+  const snsInfo = (item.source_type === 'SNS' && (item.author || item.likes != null))
+    ? '<div style="display:flex;gap:10px;margin-bottom:6px">'
+      + (item.author ? '<span style="font-family:var(--mono);font-size:9px;color:var(--white3)">' + escHtml(item.author) + '</span>' : '')
+      + (item.likes != null ? '<span style="font-family:var(--mono);font-size:9px;color:var(--white3)">❤ ' + item.likes + '</span>' : '')
+      + '</div>' : '';
   return '<div class="intel">'
     + '<div class="i-bar ' + barClass + '"></div>'
     + '<div class="i-inner">'
     + '<div class="i-top">'
     + '<div class="i-title">' + escHtml(item.title) + '</div>'
-    + '<div class="tags">' + freshTag + trustTag + layerTag + '</div>'
+    + '<div class="tags">' + snsTag + freshTag + trustTag + layerTag + '</div>'
     + '</div>'
+    + snsInfo
     + '<div class="i-body">' + escHtml(item.summary_ja || '') + '</div>'
     + '<div class="' + noteClass + '">→ ' + escHtml(item.post_hint || '') + '</div>'
     + '<div class="i-actions">'
@@ -1176,86 +1192,82 @@ function buildIntelCard(item) {
     + '</div>';
 }
 
-// ---- Intel セクション展開 ----
-function toggleIntelSection(sectionId) {
-  const div = document.getElementById('intel-' + sectionId);
-  const btn = document.getElementById('intel-' + sectionId + '-btn');
-  if (!div || !btn) return;
-  const isOpen = div.style.display !== 'none';
-  div.style.display = isOpen ? 'none' : 'block';
-  const lbl = btn.querySelector('.layer-label');
-  if (lbl && sectionId === 'caution') {
-    const count = div.querySelectorAll('.intel').length;
-    lbl.innerHTML = isOpen ? '⚠ 注意 (' + count + '件) ▼' : '⚠ 注意 (' + count + '件) ▲';
-  }
-}
-
-// ---- Intel 展開トグル ----
-function toggleIntelAll() {
-  const allDiv = document.getElementById('intel-all');
-  const btn = document.getElementById('intel-more-btn');
-  if (!allDiv || !btn) return;
-  const isOpen = allDiv.style.display !== 'none';
-  allDiv.style.display = isOpen ? 'none' : 'block';
-  const count = allDiv.querySelectorAll('.intel').length;
-  btn.innerHTML = isOpen
-    ? '<span class="layer-label">すべて見る ▼ (' + count + '件)</span><span class="chevron"></span>'
-    : '<span class="layer-label">閉じる ▲</span><span class="chevron"></span>';
-}
-
 // ---- Intel パネル描画 ----
 function renderIntel(data) {
   _iidCtr = 0;
   window._intelItems = {};
   const body = document.getElementById('intel-body');
   const featured = data.featured || [];
-  const caution = data.caution || [];
   const all = data.all || [];
 
-  // 今日タブの日付ラベル更新
-  if (data.date) {
-    const parts = data.date.split('-');
-    const tabEl = document.getElementById('itab-today');
-    if (tabEl) tabEl.textContent = '今日 ' + parts[1] + '.' + parts[2];
-  }
+  // 日付ナビ更新
+  const todayStr = getTodayStr();
+  const displayDate = data.date || todayStr;
+  const dp = displayDate.split('-');
+  const lbl = document.getElementById('idn-label');
+  if (lbl) lbl.textContent = displayDate === todayStr ? '今日 ' + dp[1] + '.' + dp[2] : dp[1] + '.' + dp[2];
+  const nextBtn = document.getElementById('idn-next');
+  if (nextBtn) nextBtn.disabled = displayDate >= todayStr;
 
-  if (featured.length === 0 && all.length === 0) {
-    body.innerHTML = '<div style="color:var(--white3);font-size:12px;padding:32px;text-align:center;">今日のインプットはまだありません</div>';
+  if (all.length === 0) {
+    body.innerHTML = '<div style="color:var(--white3);font-size:12px;padding:32px;text-align:center;">この日のインプットはまだありません</div>';
     return;
   }
 
   let html = '';
 
-  // 注目（featured）カード
-  html += featured.map(item => buildIntelCard(item)).join('');
-
-  // 注意（caution）セクション - featuredに含まれないもの
-  const featTitles = new Set(featured.map(f => f.title));
-  const cautionRest = caution.filter(c => !featTitles.has(c.title));
-  if (cautionRest.length > 0) {
-    html += '<div class="p-layer-toggle" id="intel-caution-btn" onclick="toggleIntelSection(\'caution\')" style="margin:4px 0 0">'
-      + '<span class="layer-label" style="color:var(--amber)">⚠ 注意 (' + cautionRest.length + '件) ▼</span>'
-      + '<span class="chevron"></span>'
-      + '</div>'
-      + '<div id="intel-caution" style="display:none">'
-      + cautionRest.map(item => buildIntelCard(item)).join('')
+  // 注目セクション
+  if (featured.length > 0) {
+    html += '<div class="s-div" style="margin:12px 0 8px">'
+      + '<span class="s-div-line"></span>'
+      + '<span class="s-div-label" style="padding:0 10px;font-size:11px">注目 (' + featured.length + ')</span>'
+      + '<span class="s-div-line"></span>'
       + '</div>';
+    html += featured.map(item => buildIntelCard(item)).join('');
   }
 
-  // 残り全件（featured + cautionを除く）
-  const shownTitles = new Set([...featured.map(f => f.title), ...caution.map(c => c.title)]);
-  const rest = all.filter(i => !shownTitles.has(i.title));
+  // すべてセクション（featured以外）
+  const featTitles = new Set(featured.map(f => f.title));
+  const rest = all.filter(i => !featTitles.has(i.title));
   if (rest.length > 0) {
-    html += '<div class="p-layer-toggle" id="intel-more-btn" onclick="toggleIntelAll()" style="margin:4px 0 0">'
-      + '<span class="layer-label">すべて見る ▼ (' + rest.length + '件)</span>'
-      + '<span class="chevron"></span>'
-      + '</div>'
-      + '<div id="intel-all" style="display:none">'
-      + rest.map(item => buildIntelCard(item)).join('')
+    html += '<div class="s-div" style="margin:12px 0 8px">'
+      + '<span class="s-div-line"></span>'
+      + '<span class="s-div-label" style="padding:0 10px;font-size:11px">すべて (' + rest.length + ')</span>'
+      + '<span class="s-div-line"></span>'
       + '</div>';
+    html += rest.map(item => buildIntelCard(item)).join('');
   }
 
   body.innerHTML = html;
+}
+
+// ---- Intel 日付ナビ ----
+let _currentIntelDate = null;
+
+function getTodayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function navIntelDate(direction) {
+  const base = _currentIntelDate || getTodayStr();
+  const d = new Date(base + 'T12:00:00');
+  d.setDate(d.getDate() + direction);
+  const today = getTodayStr();
+  const newDate = d.toISOString().split('T')[0];
+  if (newDate > today) return;
+  _currentIntelDate = (newDate === today) ? null : newDate;
+  loadIntel();
+}
+
+async function loadIntel() {
+  const dateParam = _currentIntelDate ? '?date=' + _currentIntelDate : '';
+  try {
+    const res = await fetch('/api/research' + dateParam);
+    const data = await res.json();
+    renderIntel(data);
+  } catch (e) {
+    console.error('intel load error', e);
+  }
 }
 
 // ---- プラットフォーム切替 ----
@@ -1655,25 +1667,23 @@ async function loadAll() {
   updateHeaderDate();
 
   try {
-    const [intelRes, queueRes, statsRes, pubRes] = await Promise.all([
-      fetch('/api/research'),
+    const [queueRes, statsRes, pubRes] = await Promise.all([
       fetch('/api/queue'),
       fetch('/api/metrics'),
       fetch('/api/posts/published'),
     ]);
-    const [intelData, queueData, statsData, pubData] = await Promise.all([
-      intelRes.json(),
+    const [queueData, statsData, pubData] = await Promise.all([
       queueRes.json(),
       statsRes.json(),
       pubRes.json(),
     ]);
-    renderIntel(intelData);
     renderQueue(queueData);
     renderStats(statsData);
     renderPublished(pubData);
   } catch (e) {
     console.error('load error', e);
   }
+  await loadIntel();
 }
 
 // ---- 日次リセット ----

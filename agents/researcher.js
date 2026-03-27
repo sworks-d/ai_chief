@@ -6,6 +6,7 @@
 
 require('dotenv').config();
 const Anthropic = require('@anthropic-ai/sdk');
+const { TwitterApi } = require('twitter-api-v2');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
@@ -100,6 +101,65 @@ JSONの配列のみ出力してください。余計な説明は不要です。`
 }
 
 /**
+ * XのバズAI投稿を収集（Free Tier対応・エラー時スキップ）
+ */
+async function searchXBuzz() {
+  if (!process.env.X_API_KEY || !process.env.X_ACCESS_TOKEN) {
+    console.log('[Researcher] X検索スキップ（APIキー未設定）');
+    return [];
+  }
+  try {
+    const client = new TwitterApi({
+      appKey: process.env.X_API_KEY,
+      appSecret: process.env.X_API_SECRET,
+      accessToken: process.env.X_ACCESS_TOKEN,
+      accessSecret: process.env.X_ACCESS_TOKEN_SECRET,
+    });
+    // 日本語 + AI関連キーワード、直近24h
+    const query = '(AI OR ChatGPT OR Claude OR Midjourney OR 生成AI OR AIデザイン OR AIクリエイター) -is:retweet lang:ja';
+    const result = await client.v2.search(query, {
+      max_results: 20,
+      'tweet.fields': ['public_metrics', 'created_at', 'author_id'],
+      expansions: ['author_id'],
+      'user.fields': ['username'],
+      start_time: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    });
+
+    const users = result.includes?.users || [];
+    const userMap = {};
+    users.forEach(u => { userMap[u.id] = u.username; });
+
+    const tweets = result.data?.data || [];
+    const buzzy = tweets.filter(t => (t.public_metrics?.like_count || 0) >= 30);
+    console.log(`[Researcher] X検索: ${tweets.length}件取得 → バズ${buzzy.length}件`);
+
+    return buzzy.map(t => {
+      const likes = t.public_metrics?.like_count || 0;
+      const text = t.text || '';
+      return {
+        title: (text.slice(0, 60) + (text.length > 60 ? '…' : '')).replace(/\n/g, ' '),
+        source_url: `https://twitter.com/i/web/status/${t.id}`,
+        source_name: 'X バズ投稿',
+        source_type: 'SNS',
+        platform: 'x',
+        layer: 'MICRO',
+        theme_tag: 'バズ',
+        collected_at: new Date().toISOString(),
+        first_published: t.created_at ? t.created_at.split('T')[0] : TODAY,
+        summary_ja: text.slice(0, 200),
+        japan_circulation: 'バズ済み',
+        likes,
+        buzz_level: likes >= 100 ? 'バズ' : 'プチバズ',
+        author: '@' + (userMap[t.author_id] || t.author_id),
+      };
+    });
+  } catch (e) {
+    console.error('[Researcher] X バズ収集エラー（スキップ）:', e.message);
+    return [];
+  }
+}
+
+/**
  * ダミーデータ（テスト用）
  */
 function getDummyData() {
@@ -164,6 +224,14 @@ async function main(testMode = false) {
     const microItems = await researchLayer('MICRO');
     allItems.push(...microItems);
     console.log(`[Researcher] MICRO: ${microItems.length}件`);
+
+    // X バズ投稿収集
+    console.log('[Researcher] X バズ投稿 収集中...');
+    const xBuzzItems = await searchXBuzz();
+    if (xBuzzItems.length > 0) {
+      allItems.push(...xBuzzItems);
+      console.log(`[Researcher] X バズ: ${xBuzzItems.length}件`);
+    }
 
     // MIDDLE（月水金のみ）
     const dayOfWeek = new Date().getDay();
