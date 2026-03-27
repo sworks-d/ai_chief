@@ -176,15 +176,23 @@ function updateQueueStatus(postId, status, postResult = null) {
 }
 
 /**
+ * Threadsが有効か確認
+ */
+function isThreadsEnabled() {
+  return !!(process.env.THREADS_USER_ID && process.env.THREADS_ACCESS_TOKEN);
+}
+
+/**
  * 現在の時間帯に投稿すべきプラットフォームを決定
  */
 function getPlatformForCurrentSlot() {
   const hour = new Date().getHours();
+  const threads = isThreadsEnabled();
 
-  if (hour >= 7 && hour < 9) return ['X'];           // 朝：X優先
-  if (hour >= 12 && hour < 14) return ['Threads'];   // 昼：Threads
-  if (hour >= 21 && hour < 23) return ['X', 'Threads']; // 夜：両方
-  return ['X', 'Threads'];                            // その他
+  if (hour >= 7 && hour < 9) return ['X'];
+  if (hour >= 12 && hour < 14) return threads ? ['Threads'] : ['X'];
+  if (hour >= 21 && hour < 23) return threads ? ['X', 'Threads'] : ['X'];
+  return threads ? ['X', 'Threads'] : ['X'];
 }
 
 /**
@@ -231,8 +239,15 @@ async function main(testMode = false, forceMode = false) {
     return;
   }
 
+  // Threads未設定の場合はスキップログ
+  if (!isThreadsEnabled()) {
+    console.log('[Poster] Threads未設定のためスキップ（THREADS_ACCESS_TOKENが.envに未設定）');
+  }
+
   // 時間帯に合わせたプラットフォームフィルタ（--forceで無効化）
-  const targetPlatforms = forceMode ? ['X', 'Threads'] : getPlatformForCurrentSlot();
+  const targetPlatforms = forceMode
+    ? (isThreadsEnabled() ? ['X', 'Threads'] : ['X'])
+    : getPlatformForCurrentSlot();
   if (forceMode) console.log('[Poster] --force: 時間帯フィルタをスキップ');
   const targetPosts = approvedPosts.filter(p => targetPlatforms.includes(p.platform));
 

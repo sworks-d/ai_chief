@@ -90,10 +90,11 @@ cron.schedule('30 7 * * *', async () => {
 
 /**
  * 昼12:15 - ポスター（昼枠）
+ * Threads未設定のため無効化中（設定後に有効化）
  */
-cron.schedule('15 12 * * *', async () => {
-  await runAgent('ポスター(昼枠)', () => poster.main(false));
-}, { timezone: 'Asia/Tokyo' });
+// cron.schedule('15 12 * * *', async () => {
+//   await runAgent('ポスター(昼枠)', () => poster.main(false));
+// }, { timezone: 'Asia/Tokyo' });
 
 /**
  * 夜21:00 - ポスター（夜枠）
@@ -151,9 +152,9 @@ console.log('  05:00 - リサーチャー(MICRO毎日)');
 console.log('  00:00 - リサーチャー(MIDDLE月水金 / MACRO日)');
 console.log('  06:30 - ファクトチェッカー');
 console.log('  06:45 - ライター');
-console.log('  07:30 - ポスター(朝枠)');
-console.log('  12:15 - ポスター(昼枠)');
-console.log('  21:00 - ポスター(夜枠)');
+console.log('  07:30 - ポスター(朝枠・X)');
+console.log('  12:15 - ポスター(昼枠・無効化中 Threads未設定)');
+console.log('  21:00 - ポスター(夜枠・X)');
 console.log('  毎時+5分 - フェッチャー(1h)');
 console.log('  6時間毎+10分 - フェッチャー(6h)');
 console.log('  03:00 - フェッチャー(24h)');

@@ -787,7 +787,7 @@ header {
   <div class="h-logo">S — BRIEF</div>
   <div class="h-sub">DAILY INPUT<br>APPROVE · ANALYZE</div>
   <div class="h-right">
-    <span class="h-date">03.27 · 07:02</span>
+    <span class="h-date" id="h-date">03.27 · 07:02</span>
     <span class="h-live">LIVE</span>
     <span class="h-pending" id="h-badge">3</span>
   </div>
@@ -801,66 +801,7 @@ header {
       <span class="panel-title">INPUT</span>
       <span class="panel-label">今日のインプット</span>
     </div>
-    <div class="panel-body">
-
-      <div class="intel">
-        <div class="i-bar i-bar-w"></div>
-        <div class="i-inner">
-          <div class="i-top">
-            <div class="i-title">Runway Gen-4、映像の一貫性が大幅向上</div>
-            <div class="tags">
-              <span class="tag t-a">🔥 初出</span>
-              <span class="tag t-g">HIGH</span>
-            </div>
-          </div>
-          <div class="i-body">キャラクター・背景の同一性が前世代から大幅改善。海外の映像ディレクターが「ようやく実案件レベル」と評価し始めている。プロ向けプランは月$95〜。</div>
-          <div class="i-note">→ カンプ・仮編集・イメージボードでの実用性が一気に上がる可能性。撮影前のクライアント確認に使えるかも。</div>
-          <div class="i-actions">
-            <button class="btn btn-use" onclick="useIntel(this)">+ 投稿に使う</button>
-            <button class="btn">skip</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="intel">
-        <div class="i-bar i-bar-b"></div>
-        <div class="i-inner">
-          <div class="i-top">
-            <div class="i-title">EU AI Act、商用コンテンツへの開示義務が明確化</div>
-            <div class="tags">
-              <span class="tag t-b">MACRO</span>
-              <span class="tag t-g">HIGH</span>
-            </div>
-          </div>
-          <div class="i-body">欧州でAI生成コンテンツの「AI生成」明記が義務化へ。広告・マーケティング素材が対象。グローバルクライアントを持つ制作会社への影響は大きい。</div>
-          <div class="i-note i-note-b">→ クライアントへのAI使用開示をどうするか、の議論が加速する。今から言い方を整理しておく価値あり。</div>
-          <div class="i-actions">
-            <button class="btn btn-use" onclick="useIntel(this)">+ 投稿に使う</button>
-            <button class="btn">skip</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="intel">
-        <div class="i-bar i-bar-a"></div>
-        <div class="i-inner">
-          <div class="i-top">
-            <div class="i-title">Adobe Firefly、著作権帰属ユーザーに——海外で訴訟継続中</div>
-            <div class="tags">
-              <span class="tag t-r">⚠ 注意</span>
-              <span class="tag t-b">MID</span>
-            </div>
-          </div>
-          <div class="i-body">Adobeは「商用利用OK・著作権はユーザー帰属」と明言。ただし欧米の法律家からは「学習データの出所問題が残っている」との指摘も継続。</div>
-          <div class="i-note i-note-a">→ メリット有り・注意も有り。両論で出すと信頼性が上がる。</div>
-          <div class="i-actions">
-            <button class="btn btn-use" onclick="useIntel(this)">+ 両論で使う</button>
-            <button class="btn">skip</button>
-          </div>
-        </div>
-      </div>
-
-    </div>
+    <div class="panel-body" id="intel-body"></div>
   </div>
 
   <!-- QUEUE -->
@@ -870,174 +811,7 @@ header {
       <span class="panel-label">承認キュー</span>
       <span class="panel-count" id="q-count">3</span>
     </div>
-    <div class="panel-body">
-
-      <!-- POST 1 -->
-      <div class="post" id="post1">
-        <div class="p-head">
-          <span class="platform px">X</span>
-          <div class="tags">
-            <span class="tag t-b">型①</span>
-            <span class="tag t-w">カメラマン</span>
-            <span class="tag t-w">ツール事例</span>
-          </div>
-          <span class="score">8.7</span>
-        </div>
-        <div class="p-src">
-          <span class="src-label">SRC</span>
-          <div class="src-item">Runway公式Blog <span class="trust tr-h">HIGH</span> <a class="src-link" href="#">↗</a></div>
-          <div class="src-item">X英語圏実使用報告 <span class="trust tr-m">MID</span></div>
-        </div>
-        <div class="p-layer-toggle" onclick="toggleLayer(this)">
-          <span class="layer-label">3層構造を展開</span>
-          <span class="chevron">▼</span>
-        </div>
-        <div class="layers">
-          <div class="lrow">
-            <span class="lid l1c">L1</span>
-            <div class="ltext">Runway Gen-4が正式リリース。公式発表でキャラクター・背景の一貫性が「大幅改善」と明記。海外の映像ディレクターが実案件での使用報告を開始。</div>
-          </div>
-          <div class="lrow">
-            <span class="lid l2c">L2</span>
-            <div class="ltext">仮編集でカメラマンに見せたところ「どこで撮ったんですか？」と聞かれた。Gen-3では出なかったリアクション。イメージボード段階では実用レベルに入ってきた手応え。</div>
-          </div>
-          <div class="lrow">
-            <span class="lid l3c">L3</span>
-            <div class="ltext">撮影前のクライアント合意に使える。ただし本番素材にはまだ検証が必要。詳しいフローはnoteで公開予定。</div>
-          </div>
-        </div>
-        <div class="p-body">Runway Gen-4、仮編集で触ってみた。
-
-公式が「一貫性を大幅改善」って発表してたけど、
-実際どうなのかが気になってたんよ。
-
-カメラマンにカンプ見せたら
-「これ、どこで撮ったんですか？」って言われた。
-
-Gen-3では出なかったリアクション。
-
-まだ本番素材には使えないけど、
-イメージボードやコンテの段階なら
-普通に実用レベルになってきたと思う。
-
-たぶん。笑</div>
-        <div class="p-actions">
-          <button class="pa pa-ok" onclick="approvePost('post1')">OK</button>
-          <button class="pa pa-ng" onclick="rejectPost('post1')">NG</button>
-          <button class="pa pa-ed">✎</button>
-        </div>
-      </div>
-
-      <!-- POST 2 -->
-      <div class="post" id="post2">
-        <div class="p-head">
-          <span class="platform pt">THREADS</span>
-          <div class="tags">
-            <span class="tag t-r">型③</span>
-            <span class="tag t-w">著作権</span>
-            <span class="tag t-w">両論</span>
-          </div>
-          <span class="score">8.3</span>
-        </div>
-        <div class="p-src">
-          <span class="src-label">SRC</span>
-          <div class="src-item">Adobe公式発表 <span class="trust tr-h">HIGH</span> <a class="src-link" href="#">↗</a></div>
-          <div class="src-item">海外法律家の反論記事 <span class="trust tr-m">MID</span></div>
-        </div>
-        <div class="p-layer-toggle" onclick="toggleLayer(this)">
-          <span class="layer-label">3層構造を展開</span>
-          <span class="chevron">▼</span>
-        </div>
-        <div class="layers">
-          <div class="lrow">
-            <span class="lid l1c">L1</span>
-            <div class="ltext">AdobeはFireflyの商用利用OKを明言し著作権はユーザーに帰属すると発表。ただし欧米の法律家複数が「学習データの問題が残っている」と指摘。</div>
-          </div>
-          <div class="lrow">
-            <span class="lid l2c">L2</span>
-            <div class="ltext">クライアントに「AIで作りました」と言う時の根拠として使えるようになってきた。ただし聞かれた時の答え方はまだ整理しきれていない。</div>
-          </div>
-          <div class="lrow">
-            <span class="lid l3c">L3</span>
-            <div class="ltext">「完全に安全」ではなく「今のところ使える根拠がある」という理解が正確。両論で伝えると読者の信頼が上がる。</div>
-          </div>
-        </div>
-        <div class="p-body">AI著作権の話、また動きがあった。
-
-AdobeがFireflyについて
-「商用OK・著作権はユーザー帰属」って明言した。
-
-クライアントに使った根拠を出せるようになる。
-
-ただ、海外では法律家が
-「学習データの問題が残ってる」って指摘してるのも事実で。
-
-完全に解決したわけじゃないんよね。
-
-使える根拠が増えた、くらいに理解してる。
-
-…みんな、どう説明してるんやろ。笑</div>
-        <div class="p-actions">
-          <button class="pa pa-ok" onclick="approvePost('post2')">OK</button>
-          <button class="pa pa-ng" onclick="rejectPost('post2')">NG</button>
-          <button class="pa pa-ed">✎</button>
-        </div>
-      </div>
-
-      <!-- POST 3 -->
-      <div class="post" id="post3">
-        <div class="p-head">
-          <span class="platform px">X</span>
-          <div class="tags">
-            <span class="tag t-g">型⑦</span>
-            <span class="tag t-w">代理店</span>
-            <span class="tag t-w">効率化</span>
-          </div>
-          <span class="score">7.9</span>
-        </div>
-        <div class="p-src">
-          <span class="src-label">SRC</span>
-          <div class="src-item">自社実績（昨日の案件） <span class="trust tr-h">実体験</span></div>
-        </div>
-        <div class="p-layer-toggle" onclick="toggleLayer(this)">
-          <span class="layer-label">3層構造を展開</span>
-          <span class="chevron">▼</span>
-        </div>
-        <div class="layers">
-          <div class="lrow">
-            <span class="lid l1c">L1</span>
-            <div class="ltext">代理店から前日17時に「翌朝イチで3パターン」の依頼。Claudeでオリエン構造化→構成案5つ出力→Fireflyでビジュアル生成→2時間で3パターン完成。</div>
-          </div>
-          <div class="lrow">
-            <span class="lid l2c">L2</span>
-            <div class="ltext">以前なら確実に徹夜だった案件がAIで2時間に。ソルジャーの無茶振りを「吸収できる体制」に変わったという実感。品質は本番レベルではないが提案レベルは十分。</div>
-          </div>
-          <div class="lrow">
-            <span class="lid l3c">L3</span>
-            <div class="ltext">Claudeへのオリエン投げ方とFireflyの組み合わせ。急ぎ案件の初稿対応に使えるフローとして再現性がある。詳しいプロンプトはnoteで公開予定。</div>
-          </div>
-        </div>
-        <div class="p-body">昨日、代理店から夕方5時に
-「明日の朝イチで3パターンほしい」って連絡。
-
-以前の自分なら確実に徹夜だった。
-
-Claudeにオリエン投げて構成案を5つ出させて、
-Fireflyでビジュアル作って、
-2時間で3パターン完成した。
-
-ソルジャーの無茶振り、
-AIが吸収してくれるようになってきた。
-
-感謝はしてないけど。笑</div>
-        <div class="p-actions">
-          <button class="pa pa-ok" onclick="approvePost('post3')">OK</button>
-          <button class="pa pa-ng" onclick="rejectPost('post3')">NG</button>
-          <button class="pa pa-ed">✎</button>
-        </div>
-      </div>
-
-    </div>
+    <div class="panel-body" id="queue-body"></div>
   </div>
 
   <!-- DATA -->
@@ -1046,132 +820,7 @@ AIが吸収してくれるようになってきた。
       <span class="panel-title">DATA</span>
       <span class="panel-label">数字・分析</span>
     </div>
-    <div class="panel-body">
-
-      <div class="stat-grid">
-        <div class="stat">
-          <div class="stat-lbl">FOLLOWERS</div>
-          <div class="stat-num">1,847</div>
-          <div class="stat-d up">↑ +34</div>
-        </div>
-        <div class="stat">
-          <div class="stat-lbl">SAVE RATE</div>
-          <div class="stat-num">0.8%</div>
-          <div class="stat-d up">↑ +0.2%</div>
-        </div>
-        <div class="stat">
-          <div class="stat-lbl">IMPRESSIONS</div>
-          <div class="stat-num">12.4k</div>
-          <div class="stat-d up">↑ +18%</div>
-        </div>
-        <div class="stat">
-          <div class="stat-lbl">ENG RATE</div>
-          <div class="stat-num">3.2%</div>
-          <div class="stat-d dn">↓ −0.1%</div>
-        </div>
-      </div>
-
-      <div class="mvp">
-        <div class="mvp-text">「Runway Gen-4、仮編集で触ってみた。カメラマンに見せたら『どこで撮ったんですか？』って言われた。笑」</div>
-        <div class="mvp-row">
-          <span class="mvp-stat">❤ <em>486</em></span>
-          <span class="mvp-stat">🔖 <em>124</em></span>
-          <span class="mvp-stat">↻ <em>38</em></span>
-        </div>
-      </div>
-
-      <div class="s-div">
-        <span class="s-div-label">ANALYST</span>
-        <span class="s-div-line"></span>
-      </div>
-
-      <div class="arow">
-        <div class="adot ad-g"></div>
-        <div class="atxt"><strong>型③×両論構造</strong>の保存率が今週1.8倍。比率を上げる価値あり。</div>
-      </div>
-      <div class="arow">
-        <div class="adot ad-g"></div>
-        <div class="atxt"><strong>L1ソース付き投稿</strong>のフォロー率が先週比+0.3%向上。</div>
-      </div>
-      <div class="arow">
-        <div class="adot ad-a"></div>
-        <div class="atxt"><strong>著作権×クライアントシーン</strong>が保存率最高。今日も1本入れて。</div>
-      </div>
-      <div class="arow">
-        <div class="adot ad-b"></div>
-        <div class="atxt">意外層：<strong>エンジニア系</strong>からの引用が増加。クリエイター×エンジニアの話を1本試す価値あり。</div>
-      </div>
-      <div class="arow">
-        <div class="adot ad-r"></div>
-        <div class="atxt">ツール比較系が3日連続でエンゲージ低下。<strong>今週は避けて。</strong></div>
-      </div>
-
-      <div class="s-div">
-        <span class="s-div-label">PERSONAS</span>
-        <span class="s-div-line"></span>
-      </div>
-
-      <div class="persona">
-        <div class="persona-head">
-          <span class="p-rank pr-core">CORE</span>
-          <span class="p-name">制作現場でAI使いたいが迷ってるクリエイター</span>
-        </div>
-        <div class="persona-body">
-          <div class="p-desc">WEB・映像系・会社員orフリーランス。著作権・クライアント説明で手が止まることがある。</div>
-          <div class="chips">
-            <span class="chip">著作権系を保存</span>
-            <span class="chip">代理店話に共感</span>
-            <span class="chip">「自分も同じ」返信</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="persona">
-        <div class="persona-head">
-          <span class="p-rank pr-grow">GROW</span>
-          <span class="p-name">AI活用を始めたい会社員クリエイター</span>
-        </div>
-        <div class="persona-body">
-          <div class="p-desc">まだ本格的に使えていない。社内への説明に不安あり。検索でたどり着いた層。</div>
-          <div class="chips">
-            <span class="chip">ツール系を保存</span>
-            <span class="chip">「やってみます」返信</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="persona">
-        <div class="persona-head">
-          <span class="p-rank pr-wild">WILD</span>
-          <span class="p-name">エンジニア・マーケター（想定外の層）</span>
-        </div>
-        <div class="persona-body">
-          <div class="p-desc">クリエイターではないが連携でAIに関心。引用でフォロワーに紹介してくれる。先週から増加中。</div>
-          <div class="chips">
-            <span class="chip">補足系の返信</span>
-            <span class="chip">引用シェア</span>
-            <span class="chip">↑ 先週比+40%</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="chart-wrap">
-        <div class="chart-head">
-          <span class="chart-lbl">FOLLOWER / 7D</span>
-          <span class="chart-val">+47</span>
-        </div>
-        <div class="bars">
-          <div class="bar" style="height:38%"></div>
-          <div class="bar" style="height:52%"></div>
-          <div class="bar" style="height:44%"></div>
-          <div class="bar" style="height:68%"></div>
-          <div class="bar" style="height:58%"></div>
-          <div class="bar" style="height:82%"></div>
-          <div class="bar today" style="height:100%"></div>
-        </div>
-      </div>
-
-    </div>
+    <div class="panel-body" id="stats-body"></div>
   </div>
 
 </div>
@@ -1194,6 +843,21 @@ AIが吸収してくれるようになってきた。
 </nav>
 
 <script>
+// ---- ユーティリティ ----
+function escHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+function escAttr(str) {
+  if (str == null) return '';
+  return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ---- パネル切替 ----
 function sw(name) {
   ['intel','queue','stats'].forEach(n => {
     document.getElementById('panel-' + n).classList.toggle('active', n === name);
@@ -1201,6 +865,7 @@ function sw(name) {
   });
 }
 
+// ---- 3層トグル ----
 function toggleLayer(el) {
   const body = el.nextElementSibling;
   const ch = el.querySelector('.chevron');
@@ -1208,30 +873,93 @@ function toggleLayer(el) {
   ch.classList.toggle('open');
 }
 
-let remaining = 3;
-
-function approvePost(id) {
-  const c = document.getElementById(id);
-  c.classList.add('approved');
-  c.querySelector('.pa-ok').textContent = '✓ 承認';
-  remaining = Math.max(0, remaining - 1);
-  updateCount();
+// ---- カウント更新 ----
+function updateCount(n) {
+  const v = n != null ? n : document.querySelectorAll('#queue-body .post:not(.approved):not(.rejected)').length;
+  document.getElementById('q-count').textContent = v;
+  document.getElementById('bt-badge').textContent = v;
+  document.getElementById('h-badge').textContent = v;
 }
 
-function rejectPost(id) {
-  const c = document.getElementById(id);
-  c.classList.add('rejected');
-  c.querySelector('.pa-ng').textContent = '✕ 却下';
-  remaining = Math.max(0, remaining - 1);
-  updateCount();
+// ---- 承認 ----
+async function approvePost(postId) {
+  const el = document.getElementById('post-' + postId);
+  if (!el || el.classList.contains('approved')) return;
+  try {
+    const res = await fetch('/api/approve/' + encodeURIComponent(postId), { method: 'POST' });
+    if (!res.ok) throw new Error('API error');
+    el.classList.add('approved');
+    el.querySelector('.pa-ok').textContent = '✓ 承認';
+    updateCount();
+  } catch (e) {
+    console.error('approve failed', e);
+  }
 }
 
-function updateCount() {
-  document.getElementById('q-count').textContent = remaining;
-  document.getElementById('bt-badge').textContent = remaining;
-  document.getElementById('h-badge').textContent = remaining;
+// ---- 却下 ----
+async function rejectPost(postId) {
+  const el = document.getElementById('post-' + postId);
+  if (!el || el.classList.contains('rejected')) return;
+  try {
+    const res = await fetch('/api/reject/' + encodeURIComponent(postId), { method: 'POST' });
+    if (!res.ok) throw new Error('API error');
+    el.classList.add('rejected');
+    el.querySelector('.pa-ng').textContent = '✕ 却下';
+    updateCount();
+  } catch (e) {
+    console.error('reject failed', e);
+  }
 }
 
+// ---- 編集 ----
+function editPost(postId) {
+  const el = document.getElementById('post-' + postId);
+  if (!el) return;
+  const bodyEl = el.querySelector('.p-body');
+  const actEl = el.querySelector('.p-actions');
+  const origText = bodyEl.textContent;
+
+  // インライン編集UIに切替
+  bodyEl.innerHTML = '<textarea id="edit-ta-' + escAttr(postId) + '" style="width:100%;min-height:120px;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:13px;line-height:1.6;resize:vertical;box-sizing:border-box;">' + escHtml(origText) + '</textarea>';
+  actEl.innerHTML = '<button class="pa pa-ok" onclick="saveEdit(\'' + escAttr(postId) + '\')">保存</button><button class="pa pa-ng" onclick="cancelEdit(\'' + escAttr(postId) + '\',\'' + escAttr(origText) + '\')">キャンセル</button>';
+}
+
+async function saveEdit(postId) {
+  const ta = document.getElementById('edit-ta-' + postId);
+  if (!ta) return;
+  const newText = ta.value.trim();
+  if (!newText) return;
+  try {
+    const res = await fetch('/api/edit/' + encodeURIComponent(postId), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ post_text: newText }),
+    });
+    if (!res.ok) throw new Error('API error');
+    const el = document.getElementById('post-' + postId);
+    el.querySelector('.p-body').textContent = newText;
+    el.querySelector('.p-actions').innerHTML =
+      '<button class="pa pa-ok" onclick="approvePost(\'' + escAttr(postId) + '\')">OK</button>' +
+      '<button class="pa pa-ng" onclick="rejectPost(\'' + escAttr(postId) + '\')">NG</button>' +
+      '<button class="pa pa-ed" onclick="editPost(\'' + escAttr(postId) + '\')">✎</button>';
+    el.classList.add('approved');
+    updateCount();
+  } catch (e) {
+    alert('保存失敗: ' + e.message);
+  }
+}
+
+function cancelEdit(postId, origText) {
+  const el = document.getElementById('post-' + postId);
+  if (!el) return;
+  el.querySelector('.p-body').textContent = origText;
+  el.querySelector('.p-actions').innerHTML =
+    '<button class="pa pa-ok" onclick="approvePost(\'' + escAttr(postId) + '\')">OK</button>' +
+    '<button class="pa pa-ng" onclick="rejectPost(\'' + escAttr(postId) + '\')">NG</button>' +
+    '<button class="pa pa-ed" onclick="editPost(\'' + escAttr(postId) + '\')">✎</button>';
+}
+
+// ---- Intel使用 ----
 function useIntel(btn) {
   btn.textContent = '✓ キューに追加';
   btn.style.color = 'var(--green)';
@@ -1239,6 +967,212 @@ function useIntel(btn) {
   btn.style.background = 'rgba(200,240,74,0.08)';
   btn.disabled = true;
 }
+
+// ---- Intel パネル描画 ----
+function renderIntel(data) {
+  const body = document.getElementById('intel-body');
+  const items = [...(data.featured || []), ...(data.caution || [])];
+  if (items.length === 0) {
+    body.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:32px;text-align:center;">今日のインプットはまだありません</div>';
+    return;
+  }
+  body.innerHTML = items.map(item => {
+    const barClass = item.info_type === 'TYPE_C' ? 'i-bar-a'
+      : (item.info_type === 'TYPE_A' || item.freshness === 'A') ? 'i-bar-w'
+      : 'i-bar-b';
+    const freshTag = item.freshness === 'A' ? '<span class="tag t-a">🔥 初出</span>'
+      : item.freshness === 'B' ? '<span class="tag t-a">新着</span>'
+      : item.freshness === 'C' ? '<span class="tag t-r">⚠ バズ</span>' : '';
+    const trustTag = item.trust === 'HIGH' ? '<span class="tag t-g">HIGH</span>'
+      : item.trust === 'MID' ? '<span class="tag t-b">MID</span>' : '';
+    const layerTag = item.layer ? '<span class="tag t-w">' + escHtml(item.layer) + '</span>' : '';
+    const noteClass = item.info_type === 'TYPE_C' ? 'i-note i-note-a'
+      : item.layer === 'MACRO' ? 'i-note i-note-b' : 'i-note';
+    const btnLabel = item.info_type === 'TYPE_C' ? '+ 両論で使う' : '+ 投稿に使う';
+    return '<div class="intel">'
+      + '<div class="i-bar ' + barClass + '"></div>'
+      + '<div class="i-inner">'
+      + '<div class="i-top">'
+      + '<div class="i-title">' + escHtml(item.title) + '</div>'
+      + '<div class="tags">' + freshTag + trustTag + layerTag + '</div>'
+      + '</div>'
+      + '<div class="i-body">' + escHtml(item.summary_ja || '') + '</div>'
+      + '<div class="' + noteClass + '">→ ' + escHtml(item.post_hint || '') + '</div>'
+      + '<div class="i-actions">'
+      + '<button class="btn btn-use" onclick="useIntel(this)">' + btnLabel + '</button>'
+      + '<button class="btn">skip</button>'
+      + '</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+// ---- Queue パネル描画 ----
+function renderQueue(posts) {
+  const body = document.getElementById('queue-body');
+  if (posts.length === 0) {
+    body.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:32px;text-align:center;">承認待ちの投稿はありません</div>';
+    updateCount(0);
+    return;
+  }
+  updateCount(posts.length);
+  body.innerHTML = posts.map(post => {
+    const platformClass = post.platform === 'X' ? 'px' : 'pt';
+    const platformLabel = post.platform === 'X' ? 'X' : 'THREADS';
+    const trust = post.source_item && post.source_item.trust;
+    const trustClass = trust === 'HIGH' ? 'tr-h' : 'tr-m';
+    const trustLabel = trust || 'MID';
+    const srcName = (post.source_item && post.source_item.source_name) || '—';
+    const srcUrl = (post.source_item && post.source_item.source_url) || '';
+    const srcLink = srcUrl ? ' <a class="src-link" href="' + escAttr(srcUrl) + '" target="_blank">↗</a>' : '';
+    // Tags
+    const postTypeNum = post.post_type || '';
+    const priorityTypes = ['型⑤','型⑥','型⑦'];
+    const alertTypes = ['型③','型④'];
+    const typeTagClass = priorityTypes.includes(postTypeNum) ? 't-g'
+      : alertTypes.includes(postTypeNum) ? 't-r' : 't-b';
+    const postTypeTag = postTypeNum ? '<span class="tag ' + typeTagClass + '">' + escHtml(postTypeNum) + '</span>' : '';
+    const themeTag = (post.source_item && post.source_item.theme_tag)
+      ? '<span class="tag t-w">' + escHtml(post.source_item.theme_tag) + '</span>' : '';
+    const charTag = post.character_tag
+      ? '<span class="tag t-w">' + escHtml(post.character_tag) + '</span>' : '';
+    const threadTag = post.thread_role
+      ? '<span class="tag t-a">' + escHtml(post.thread_role) + '</span>' : '';
+    const score = post.quality_score != null ? Number(post.quality_score).toFixed(1) : '—';
+    const l1 = post.layer1 || (post.source_item && post.source_item.summary_ja) || '—';
+    const l2 = post.layer2 || '—';
+    const l3 = post.layer3 || '—';
+    const postText = post.post_text || '';
+    const pid = escAttr(post.id);
+    return '<div class="post" id="post-' + pid + '">'
+      + '<div class="p-head">'
+      + '<span class="platform ' + platformClass + '">' + platformLabel + '</span>'
+      + '<div class="tags">' + postTypeTag + themeTag + charTag + threadTag + '</div>'
+      + '<span class="score">' + score + '</span>'
+      + '</div>'
+      + '<div class="p-src">'
+      + '<span class="src-label">SRC</span>'
+      + '<div class="src-item">' + escHtml(srcName) + ' <span class="trust ' + trustClass + '">' + trustLabel + '</span>' + srcLink + '</div>'
+      + '</div>'
+      + '<div class="p-layer-toggle" onclick="toggleLayer(this)">'
+      + '<span class="layer-label">3層構造を展開</span>'
+      + '<span class="chevron">▼</span>'
+      + '</div>'
+      + '<div class="layers">'
+      + '<div class="lrow"><span class="lid l1c">L1</span><div class="ltext">' + escHtml(l1) + '</div></div>'
+      + '<div class="lrow"><span class="lid l2c">L2</span><div class="ltext">' + escHtml(l2) + '</div></div>'
+      + '<div class="lrow"><span class="lid l3c">L3</span><div class="ltext">' + escHtml(l3) + '</div></div>'
+      + '</div>'
+      + '<div class="p-body">' + escHtml(postText) + '</div>'
+      + '<div class="p-actions">'
+      + '<button class="pa pa-ok" onclick="approvePost(\'' + pid + '\')">OK</button>'
+      + '<button class="pa pa-ng" onclick="rejectPost(\'' + pid + '\')">NG</button>'
+      + '<button class="pa pa-ed" onclick="editPost(\'' + pid + '\')">✎</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+// ---- Stats パネル描画 ----
+function renderStats(data) {
+  const body = document.getElementById('stats-body');
+  const y = data.yesterday || {};
+  const imp = y.total_impressions || 0;
+  const likeRate = ((y.avg_like_rate || 0) * 100).toFixed(1);
+  const saveRate = ((y.avg_save_rate || 0) * 100).toFixed(1);
+  const postCount = y.post_count || 0;
+  const impStr = imp >= 1000 ? (imp / 1000).toFixed(1) + 'k' : String(imp);
+
+  let html = '<div class="stat-grid">'
+    + '<div class="stat"><div class="stat-lbl">IMPRESSIONS</div><div class="stat-num">' + impStr + '</div><div class="stat-d">昨日合計</div></div>'
+    + '<div class="stat"><div class="stat-lbl">LIKE RATE</div><div class="stat-num">' + likeRate + '%</div><div class="stat-d">平均</div></div>'
+    + '<div class="stat"><div class="stat-lbl">SAVE RATE</div><div class="stat-num">' + saveRate + '%</div><div class="stat-d">平均</div></div>'
+    + '<div class="stat"><div class="stat-lbl">POSTS</div><div class="stat-num">' + postCount + '</div><div class="stat-d">昨日</div></div>'
+    + '</div>';
+
+  if (data.mvp_post) {
+    const m = data.mvp_post;
+    html += '<div class="mvp">'
+      + '<div class="mvp-text">「' + escHtml(m.content || '') + '」</div>'
+      + '<div class="mvp-row">'
+      + '<span class="mvp-stat">❤ <em>' + (m.likes || 0) + '</em></span>'
+      + '<span class="mvp-stat">🔖 <em>' + (m.saves || 0) + '</em></span>'
+      + '<span class="mvp-stat">👁 <em>' + (m.impressions || 0) + '</em></span>'
+      + '</div></div>';
+  }
+
+  const analystRows = (data.analyst_summary || []);
+  if (analystRows.length > 0) {
+    const dotCols = ['ad-g','ad-g','ad-a','ad-b','ad-r'];
+    html += '<div class="s-div"><span class="s-div-label">ANALYST</span><span class="s-div-line"></span></div>';
+    html += analystRows.map((row, i) =>
+      '<div class="arow"><div class="adot ' + dotCols[i % dotCols.length] + '"></div><div class="atxt">' + escHtml(row) + '</div></div>'
+    ).join('');
+  }
+
+  const personasData = (data.personas && (data.personas.personas || data.personas.persona_list)) || [];
+  if (personasData.length > 0) {
+    const rankClasses = ['pr-core','pr-grow','pr-wild'];
+    const rankLabels = ['CORE','GROW','WILD'];
+    html += '<div class="s-div"><span class="s-div-label">PERSONAS</span><span class="s-div-line"></span></div>';
+    html += personasData.slice(0, 3).map((p, i) => {
+      const name = p.name || p.persona_name || '';
+      const desc = p.description || p.desc || '';
+      const chips = (p.behaviors || p.chips || p.keywords || []);
+      return '<div class="persona">'
+        + '<div class="persona-head">'
+        + '<span class="p-rank ' + rankClasses[i] + '">' + rankLabels[i] + '</span>'
+        + '<span class="p-name">' + escHtml(name) + '</span>'
+        + '</div>'
+        + '<div class="persona-body">'
+        + '<div class="p-desc">' + escHtml(desc) + '</div>'
+        + '<div class="chips">' + chips.map(c => '<span class="chip">' + escHtml(c) + '</span>').join('') + '</div>'
+        + '</div></div>';
+    }).join('');
+  }
+
+  if (!data.mvp_post && analystRows.length === 0 && personasData.length === 0) {
+    html += '<div style="color:var(--muted);font-size:12px;padding:32px;text-align:center;">データがまだありません</div>';
+  }
+
+  body.innerHTML = html;
+}
+
+// ---- ヘッダー日時更新 ----
+function updateHeaderDate() {
+  const now = new Date();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const hh = String(now.getHours()).padStart(2, '0');
+  const min = String(now.getMinutes()).padStart(2, '0');
+  const el = document.getElementById('h-date');
+  if (el) el.textContent = mm + '.' + dd + ' · ' + hh + ':' + min;
+}
+
+// ---- 初期ロード ----
+async function loadAll() {
+  updateHeaderDate();
+
+  try {
+    const [intelRes, queueRes, statsRes] = await Promise.all([
+      fetch('/api/research'),
+      fetch('/api/queue'),
+      fetch('/api/metrics'),
+    ]);
+    const [intelData, queueData, statsData] = await Promise.all([
+      intelRes.json(),
+      queueRes.json(),
+      statsRes.json(),
+    ]);
+    renderIntel(intelData);
+    renderQueue(queueData);
+    renderStats(statsData);
+  } catch (e) {
+    console.error('load error', e);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadAll);
 </script>
 </body>
 </html>

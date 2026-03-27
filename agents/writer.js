@@ -464,20 +464,25 @@ async function generatePostSet(item) {
   }
 
   // Threads投稿（SHORT型のみ・最大2回）
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    const threadsPost = await generateShortPost(item, 'Threads', attempt);
-    if (threadsPost && threadsPost.quality_score >= 7.0) {
-      results.push({
-        ...threadsPost,
-        id: `${TODAY}-TH-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        platform: 'Threads', source_item: item, status: 'pending',
-        created_at: new Date().toISOString(),
-      });
-      break;
+  // THREADS_ACCESS_TOKENが設定されている場合のみ生成
+  if (process.env.THREADS_ACCESS_TOKEN) {
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      const threadsPost = await generateShortPost(item, 'Threads', attempt);
+      if (threadsPost && threadsPost.quality_score >= 7.0) {
+        results.push({
+          ...threadsPost,
+          id: `${TODAY}-TH-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          platform: 'Threads', source_item: item, status: 'pending',
+          created_at: new Date().toISOString(),
+        });
+        break;
+      }
+      if (attempt === 2) {
+        console.log(`[Writer]   Threads品質不足 (2回試行) → スキップ`);
+      }
     }
-    if (attempt === 2) {
-      console.log(`[Writer]   Threads品質不足 (2回試行) → スキップ`);
-    }
+  } else {
+    console.log(`[Writer]   Threads未設定のためスキップ`);
   }
 
   return results;
