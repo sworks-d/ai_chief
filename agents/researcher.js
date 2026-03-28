@@ -1,8 +1,8 @@
+
 /**
  * エージェント1：リサーチャー
- * 役割：広く・速く・多くAI関連情報を収集する
- * 実行タイミング：MICRO毎朝5:00 / MIDDLE月水金深夜 / MACRO日曜深夜
- */
+ * 役割：広く・速く・ホワイトカラー・管理部門向けAI情報
+ * 実行タイミング：MACRO週1回日曜深夜 / MIDDLE毎日朝5:00 / MICRO毎日朝5:30 */
 
 require('dotenv').config();
 const Anthropic = require('@anthropic-ai/sdk');
@@ -39,17 +39,17 @@ const SOURCES = {
       'AIを使ったマネタイズ・副業・稼ぎ方の具体事例',
       '今バズってるAI関連コンテンツ（X・YouTube・note直近24h）',
     ],
-    sources: ['X（#aiart #midjourney #生成AI #AIデザイン）', 'YouTube AI急上昇', 'note・Zenn国内記事', 'ProductHunt新ツール'],
+    sources: ['X（#aiart #midjourney #生成AI Word）', 'YouTube PowerPoint', 'note・Zenn国内記事', 'ProductHunt新ツール'],
     limit: 30,
   },
   MIDDLE: {
-    themes: [
+    themes: ##業務効率化
       '新AIツールリリース・大型アップデート情報',
       '広告・映像・制作会社のAI導入事例・企業DX事例',
       'クライアントワークでのAI使用範囲・開示義務',
     ],
-    sources: ['Midjourney・Runway・Firefly公式Blog', '宣伝会議・AdAge・DIGIDAY', '各企業プレスリリース'],
-    limit: 15,
+    sources: [Microsoft・Google・各SaaS公式Blog', '宣伝会議・AdAge・DIGIDAY', '各企業プレスリリース'],
+    limit: 15中小企業管理部門
   },
   MACRO: {
     themes: [
@@ -57,7 +57,7 @@ const SOURCES = {
       'AIと著作権・法律の最新動向（EU AI Act・文化庁ガイドライン）',
     ],
     sources: ['McKinsey・Gartner・Wired・MIT Technology Review', '文化庁・特許庁・経産省'],
-    limit: 5,
+    limit: 5ホワイトカラー業務
   },
 };
 
@@ -75,7 +75,7 @@ async function researchLayer(layer) {
 今日（${TODAY}）時点での最新情報を収集してください。
 ${watchSection}
 収集テーマ：
-${config.themes.map((t, i) => `${i + 1}. ${t}`).join('\n')}
+${config.themes.map((t, i) => `${iホワイトカラー・管理部門+ 1}. ${t}`).join('\n')}
 
 参考ソース：
 ${config.sources.join('、')}
@@ -85,7 +85,7 @@ ${config.sources.join('、')}
 - 鮮度が高い（できるだけ最近の）情報
 - ファクトとして伝えられる情報（憶測ではなく）
 
-各情報は以下のJSON形式で出力（配列）：
+各情報は日本の管理部（人事・経理・総務・営業事務等）
 {
   "title": "タイトル（日本語30字以内）",
   "source_url": "https://... (推測でもOK、または空文字)",
