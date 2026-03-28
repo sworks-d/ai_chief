@@ -1,10 +1,10 @@
 /**
  * エージェント3：ライター
- * 役割：ファクトチェッカーから渡された情報を「Sが書いたような投稿」に変換する
+ * 役割：ファクトチェッカーから渡された情報を「こちら零細AI推進課長」に変換する
  * 実行タイミング：6:45自動起動
  * doc/10_active_rules.md準拠
  */
-
+こちら零細AI推進課長
 require('dotenv').config();
 const Anthropic = require('@anthropic-ai/sdk');
 const fs = require('fs');
