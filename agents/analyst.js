@@ -5,11 +5,11 @@
  */
 
 require('dotenv').config();
-const Anthropic = require('@anthropic-ai/sdk');
+const { GoogleGenAI } = require('@google/genai');
 const fs = require('fs');
 const path = require('path');
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const METRICS_DIR = path.join(__dirname, '..', 'data', 'metrics');
 const PERSONAS_DIR = path.join(__dirname, '..', 'data', 'personas');
@@ -32,19 +32,33 @@ function getWeekNumber() {
 async function dailyAnalysis(metricsData) {
   if (metricsData.length === 0) return null;
 
-  const postsStr = metricsData.map(m => {
+  let postsStr = "";
+  const mediaParts = [];
+
+  metricsData.forEach((m, idx) => {
     const m1h = m.metrics_1h || {};
     const m24h = m.metrics_24h || {};
-    return `
+    postsStr += `
+[投稿 ${idx + 1}]
 投稿ID: ${m.post_id || m.content?.slice(0, 20)}
 プラットフォーム: ${m.platform}
 型: ${m.post_type}
 テーマ: ${m.theme_tag}
 キャラタグ: ${m.character_tag || 'なし'}
+画像添付: ${m.media_path ? 'あり（画像データ参照）' : 'なし'}
 1h: imp=${m1h.impressions || 0}, likes=${m1h.likes || 0}, saves=${m1h.saves || 0}
 24h: imp=${m24h.impressions || 0}, likes=${m24h.likes || 0}, saves=${m24h.saves || 0}
-本文先頭: ${(m.content || '').slice(0, 50)}...`;
-  }).join('\n---');
+本文先頭: ${(m.content || '').slice(0, 50)}...
+---`;
+    if (m.media_path && fs.existsSync(m.media_path)) {
+      mediaParts.push({
+        inlineData: {
+          data: fs.readFileSync(m.media_path).toString("base64"),
+          mimeType: "image/png"
+        }
+      });
+    }
+  });
 
   const prompt = `あなたはSNS分析エージェントです。
 以下の投稿メトリクスを分析して、日次レポートをJSONで出力してください。
@@ -87,13 +101,16 @@ JSONのみ出力してください：
   }
 }`;
 
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 2000,
-    messages: [{ role: 'user', content: prompt }],
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-pro',
+    contents: [{ text: prompt }, ...mediaParts],
+    config: {
+      systemInstruction: 'あなたはSNS分析エージェントです。画像とテキストを組み合わせたマルチモーダル解析を行います。',
+      responseMimeType: 'application/json',
+    }
   });
 
-  const text = response.content.find(b => b.type === 'text')?.text || '{}';
+  const text = response.text || '{}';
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
@@ -141,6 +158,19 @@ async function weeklyAnalysis(allMetrics) {
     byChar[char].totalSaveRate += saveRate;
   }
 
+  const mediaParts = [];
+  allMetrics.forEach(m => {
+    if (m.media_path && fs.existsSync(m.media_path)) {
+      // 重複・過剰なトークンを防ぐため、サンプリングするか全部入れるか（Geminiは2Mなので今回は全部入れる）
+      mediaParts.push({
+        inlineData: {
+          data: fs.readFileSync(m.media_path).toString("base64"),
+          mimeType: "image/png"
+        }
+      });
+    }
+  });
+
   const statsStr = JSON.stringify({ byType, byTheme, byChar }, null, 2);
 
   const prompt = `あなたはSNS週次分析エージェントです。
@@ -174,13 +204,16 @@ JSONのみ出力してください：
   }
 }`;
 
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 2000,
-    messages: [{ role: 'user', content: prompt }],
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-pro',
+    contents: [{ text: prompt }, ...mediaParts.slice(0, 50)], // API上限を考慮して最大50枚に制限
+    config: {
+      systemInstruction: 'あなたはSNS週次分析エージェントです。画像データも参照して視覚的要素とパフォーマンスの相関を分析してください。',
+      responseMimeType: 'application/json',
+    }
   });
 
-  const text = response.content.find(b => b.type === 'text')?.text || '{}';
+  const text = response.text || '{}';
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
@@ -279,16 +312,16 @@ JSONのみ出力：
   "trust_level": "HIGH|MID|LOW"
 }`;
 
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 1000,
-    system: [
-      { type: 'text', text: 'あなたはSNS投稿パターン分析の専門家です。バズ投稿の構造を客観的に分析します。', cache_control: { type: 'ephemeral' } }
-    ],
-    messages: [{ role: 'user', content: prompt }],
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-pro',
+    contents: prompt,
+    config: {
+      systemInstruction: 'あなたはSNS投稿パターン分析の専門家です。バズ投稿の構造を客観的に分析します。',
+      responseMimeType: 'application/json',
+    }
   });
 
-  const text = response.content.find(b => b.type === 'text')?.text || '{}';
+  const text = response.text || '{}';
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     const result = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
@@ -376,13 +409,16 @@ JSONのみ出力してください：
   "content_strategy_hint": "これらの層を踏まえた来月のコンテンツ戦略提案"
 }`;
 
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 2000,
-    messages: [{ role: 'user', content: prompt }],
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-pro',
+    contents: prompt,
+    config: {
+      systemInstruction: 'あなたはターゲット分析エージェントです。',
+      responseMimeType: 'application/json',
+    }
   });
 
-  const text = response.content.find(b => b.type === 'text')?.text || '{}';
+  const text = response.text || '{}';
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) : null;

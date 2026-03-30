@@ -5,9 +5,9 @@
 ```
 「頭の良さが必要な作業にだけ高いモデルを使う」
 
-Haiku：定型作業・データ取得・APIを叩くだけの処理
-Sonnet：文章生成・分析・判断が必要な処理
-Opus：使わない（コスパが悪すぎる）
+Gemini 2.5 Flash：定型作業・データ取得・APIを叩くだけの処理
+Gemini 2.5 Pro：文章生成・分析・判断が必要な処理
+旧世代モデル：使わない（コスパが悪すぎる）
 ```
 
 ---
@@ -16,9 +16,9 @@ Opus：使わない（コスパが悪すぎる）
 
 | モデル | 入力 | 出力 | 特徴 |
 |---|---|---|---|
-| claude-haiku-4-5-20251001 | $1/MTok | $5/MTok | 高速・低コスト |
-| claude-sonnet-4-6 | $3/MTok | $15/MTok | バランス型・品質高い |
-| claude-opus-4-6 | $15/MTok | $75/MTok | 最高性能・高コスト |
+| gemini-2.5-flash | $1/MTok | $5/MTok | 高速・低コスト |
+| gemini-2.5-pro | $3/MTok | $15/MTok | バランス型・品質高い |
+| gemini-1.5-pro | $15/MTok | $75/MTok | 最高性能・高コスト |
 
 MTok = 100万トークン
 
@@ -26,10 +26,10 @@ MTok = 100万トークン
 
 ## 各エージェントのモデル割り振り
 
-### エージェント1：リサーチャー → **Haiku**
+### エージェント1：リサーチャー → **Gemini 2.5 Flash**
 
 ```javascript
-model: "claude-haiku-4-5-20251001"
+model: "gemini-2.5-flash"
 ```
 
 **理由：**
@@ -42,24 +42,24 @@ model: "claude-haiku-4-5-20251001"
 
 判断の難しさ：低
 → ルールが明確・フォーマットが決まってる
-→ Haikuで十分な品質が出る
-→ 1日30件処理してもSonnetの1/3のコスト
+→ Gemini 2.5 Flashで十分な品質が出る
+→ 1日30件処理してもGemini 2.5 Proの1/3のコスト
 ```
 
 **推定コスト（1日）：**
 ```
 処理量：約5万トークン
-Haiku：$0.04
-Sonnet：$0.20
+Gemini 2.5 Flash：$0.04
+Gemini 2.5 Pro：$0.20
 削減効果：$0.16/日（月$4.8削減）
 ```
 
 ---
 
-### エージェント2：ファクトチェッカー → **Haiku**
+### エージェント2：ファクトチェッカー → **Gemini 2.5 Flash**
 
 ```javascript
-model: "claude-haiku-4-5-20251001"
+model: "gemini-2.5-flash"
 ```
 
 **理由：**
@@ -73,28 +73,28 @@ model: "claude-haiku-4-5-20251001"
 判断の難しさ：低〜中
 → 判定ルールが明確に定義されている（doc/04_agents.md参照）
 → 「このソースはHIGHか？」はルールベースで判断できる
-→ Haikuで十分
+→ Gemini 2.5 Flashで十分
 
 ただし注意：
-→ 「両論提示のヒント生成」部分はSonnetの方が精度が上がる
-→ コスト優先ならHaiku・品質優先ならSonnet
-→ まずHaikuで試して品質が足りなければSonnetに変更
+→ 「両論提示のヒント生成」部分はGemini 2.5 Proの方が精度が上がる
+→ コスト優先ならGemini 2.5 Flash・品質優先ならGemini 2.5 Pro
+→ まずGemini 2.5 Flashで試して品質が足りなければGemini 2.5 Proに変更
 ```
 
 **推定コスト（1日）：**
 ```
 処理量：約3万トークン
-Haiku：$0.02
-Sonnet：$0.12
+Gemini 2.5 Flash：$0.02
+Gemini 2.5 Pro：$0.12
 削減効果：$0.10/日（月$3削減）
 ```
 
 ---
 
-### エージェント3：ライター → **Sonnet（絶対に下げない）**
+### エージェント3：ライター → **Gemini 2.5 Pro（絶対に下げない）**
 
 ```javascript
-model: "claude-sonnet-4-6"
+model: "gemini-2.5-pro"
 ```
 
 **理由：**
@@ -109,8 +109,8 @@ model: "claude-sonnet-4-6"
 
 判断の難しさ：高
 → 「Sっぽさ」の再現はモデルの品質に直結する
-→ Haikuにすると「AIが書いた感」が出る
-→ ここだけは絶対にSonnetを維持する
+→ Gemini 2.5 Flashにすると「AIが書いた感」が出る
+→ ここだけは絶対にGemini 2.5 Proを維持する
 
 収益への直結度：最高
 → ライターの品質 = フォロワーが増えるかどうか
@@ -121,16 +121,16 @@ model: "claude-sonnet-4-6"
 **推定コスト（1日）：**
 ```
 処理量：約4万トークン（X3本+Threads2本生成）
-Sonnet：$0.16
+Gemini 2.5 Pro：$0.16
 → ここは削減しない
 ```
 
 ---
 
-### エージェント4：ポスター → **Haiku**
+### エージェント4：ポスター → **Gemini 2.5 Flash**
 
 ```javascript
-model: "claude-haiku-4-5-20251001"
+model: "gemini-2.5-flash"
 ```
 
 **理由：**
@@ -144,23 +144,23 @@ model: "claude-haiku-4-5-20251001"
 判断の難しさ：ほぼゼロ
 → コードを実行するだけ
 → 文章を考える必要がない
-→ Haikuで十分どころかHaikuが最適
+→ Gemini 2.5 Flashで十分どころかGemini 2.5 Flashが最適
 ```
 
 **推定コスト（1日）：**
 ```
 処理量：約0.5万トークン
-Haiku：$0.004
-Sonnet：$0.02
+Gemini 2.5 Flash：$0.004
+Gemini 2.5 Pro：$0.02
 削減効果：小さいが積み重なる
 ```
 
 ---
 
-### エージェント5：フェッチャー → **Haiku**
+### エージェント5：フェッチャー → **Gemini 2.5 Flash**
 
 ```javascript
-model: "claude-haiku-4-5-20251001"
+model: "gemini-2.5-flash"
 ```
 
 **理由：**
@@ -173,22 +173,22 @@ model: "claude-haiku-4-5-20251001"
 
 判断の難しさ：ほぼゼロ
 → 数字を取ってくるだけ
-→ Haikuが最適
+→ Gemini 2.5 Flashが最適
 ```
 
 **推定コスト（1日）：**
 ```
 処理量：約0.5万トークン × 3回 = 1.5万トークン
-Haiku：$0.012
+Gemini 2.5 Flash：$0.012
 → 最小コスト
 ```
 
 ---
 
-### エージェント6：アナリスト → **Sonnet**
+### エージェント6：アナリスト → **Gemini 2.5 Pro**
 
 ```javascript
-model: "claude-sonnet-4-6"
+model: "gemini-2.5-pro"
 ```
 
 **理由：**
@@ -203,18 +203,18 @@ model: "claude-sonnet-4-6"
 判断の難しさ：高
 → パターン認識・仮説立案・戦略的判断が必要
 → ここの精度がシステム全体の改善速度を決める
-→ Haikuにすると分析が浅くなりフィードバックの質が落ちる
+→ Gemini 2.5 Flashにすると分析が浅くなりフィードバックの質が落ちる
 
 ただし：
-→ 日次分析（毎日）：Haiku可（単純な数字の比較）
-→ 週次・月次分析：Sonnet必須（深い洞察が必要）
+→ 日次分析（毎日）：Gemini 2.5 Flash可（単純な数字の比較）
+→ 週次・月次分析：Gemini 2.5 Pro必須（深い洞察が必要）
 → 将来的に分けて設計するとさらにコスト削減できる
 ```
 
 **推定コスト（1日）：**
 ```
 処理量：約3万トークン
-Sonnet：$0.12
+Gemini 2.5 Pro：$0.12
 → 週次・月次分析は週1・月1なのでコスト影響は小さい
 ```
 
@@ -222,7 +222,7 @@ Sonnet：$0.12
 
 ## コスト試算まとめ
 
-### 最適化前（全部Sonnet）
+### 最適化前（全部Gemini 2.5 Pro）
 
 ```
 1日の合計コスト：
@@ -235,16 +235,16 @@ Sonnet：$0.12
 合計：$0.64/日 → 月$19.2
 ```
 
-### 最適化後（Haiku混在）
+### 最適化後（Gemini 2.5 Flash混在）
 
 ```
 1日の合計コスト：
-├── リサーチャー：$0.04（Haiku）
-├── ファクトチェッカー：$0.02（Haiku）
-├── ライター：$0.16（Sonnet・変えない）
-├── ポスター：$0.004（Haiku）
-├── フェッチャー：$0.012（Haiku）
-└── アナリスト：$0.12（Sonnet）
+├── リサーチャー：$0.04（Gemini 2.5 Flash）
+├── ファクトチェッカー：$0.02（Gemini 2.5 Flash）
+├── ライター：$0.16（Gemini 2.5 Pro・変えない）
+├── ポスター：$0.004（Gemini 2.5 Flash）
+├── フェッチャー：$0.012（Gemini 2.5 Flash）
+└── アナリスト：$0.12（Gemini 2.5 Pro）
 合計：$0.356/日 → 月$10.7
 
 削減効果：月$8.5（約44%削減）
@@ -276,14 +276,14 @@ Sonnet：$0.12
 ```javascript
 // agents/researcher.js
 const response = await anthropic.messages.create({
-  model: "claude-haiku-4-5-20251001",  // Haiku
+  model: "gemini-2.5-flash",  // Gemini 2.5 Flash
   max_tokens: 2000,
   messages: [...]
 });
 
 // agents/writer.js
 const response = await anthropic.messages.create({
-  model: "claude-sonnet-4-6",  // Sonnet（変えない）
+  model: "gemini-2.5-pro",  // Gemini 2.5 Pro（変えない）
   max_tokens: 4000,
   messages: [...]
 });
@@ -294,7 +294,7 @@ const response = await anthropic.messages.create({
 ```javascript
 // ナレッジファイルをキャッシュ対象にする
 const response = await anthropic.messages.create({
-  model: "claude-sonnet-4-6",
+  model: "gemini-2.5-pro",
   max_tokens: 4000,
   system: [
     {
@@ -316,12 +316,12 @@ const response = await anthropic.messages.create({
 ```
 以下のモデル割り振りに変更してください：
 
-agents/researcher.js → claude-haiku-4-5-20251001
-agents/fact_checker.js → claude-haiku-4-5-20251001
-agents/writer.js → claude-sonnet-4-6（変更なし）
-agents/poster.js → claude-haiku-4-5-20251001
-agents/fetcher.js → claude-haiku-4-5-20251001
-agents/analyst.js → claude-sonnet-4-6（変更なし）
+agents/researcher.js → gemini-2.5-flash
+agents/fact_checker.js → gemini-2.5-flash
+agents/writer.js → gemini-2.5-pro（変更なし）
+agents/poster.js → gemini-2.5-flash
+agents/fetcher.js → gemini-2.5-flash
+agents/analyst.js → gemini-2.5-pro（変更なし）
 
 また、writer.jsとanalyst.jsにプロンプトキャッシュを実装してください。
 キャッシュ対象はknowledge/フォルダの全ファイルです。
@@ -334,8 +334,8 @@ agents/analyst.js → claude-sonnet-4-6（変更なし）
 実際にいくらかかってるかを確認する方法：
 
 ```bash
-# Anthropic Consoleで確認
-https://console.anthropic.com/settings/cost
+# Google AI Studioで確認
+https://aistudio.google.com/settings/cost
 
 # ローカルでトークン数を確認（実装後）
 node scripts/check_usage.js
@@ -343,7 +343,7 @@ node scripts/check_usage.js
 
 月の予算上限を設定しておくと安心：
 ```
-console.anthropic.com/settings/limits
+aistudio.google.com/settings/limits
 →「Monthly spend limit」を$20に設定
 → 超えたら自動でAPIが止まる
 ```
@@ -355,12 +355,12 @@ console.anthropic.com/settings/limits
 ```
 フェーズ2（月3万円以上稼げるようになったら）：
 
-① アナリストの日次分析をHaikuに分離
-   → 日次（単純な数字比較）：Haiku
-   → 週次・月次（深い分析）：Sonnet
+① アナリストの日次分析をGemini 2.5 Flashに分離
+   → 日次（単純な数字比較）：Gemini 2.5 Flash
+   → 週次・月次（深い分析）：Gemini 2.5 Pro
    → 月$2〜3追加削減
 
-② バッチAPI（Anthropic Batch API）の活用
+② バッチAPI（Gemini Batch API）の活用
    → リアルタイム不要な処理を夜間バッチに
    → 通常の50%のコストで処理できる
    → リサーチャー・アナリストに適用可能

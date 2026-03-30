@@ -5,13 +5,13 @@
  * 実行タイミング：MACRO週1回日曜深夜 / MIDDLE毎日朝5:00 / MICRO毎日朝5:30 */
 
 require('dotenv').config();
-const Anthropic = require('@anthropic-ai/sdk');
+const { GoogleGenAI } = require('@google/genai');
 const { TwitterApi } = require('twitter-api-v2');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const TODAY = new Date().toISOString().split('T')[0];
 const DATA_DIR = path.join(__dirname, '..', 'data', 'research');
@@ -101,14 +101,15 @@ ${config.sources.join('、')}
 
 JSONの配列のみ出力してください。余計な説明は不要です。`;
 
-  const stream = await client.messages.stream({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 4000,
-    messages: [{ role: 'user', content: prompt }],
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: prompt,
+    config: {
+      responseMimeType: 'application/json',
+    }
   });
 
-  const response = await stream.finalMessage();
-  const text = response.content.find(b => b.type === 'text')?.text || '[]';
+  const text = response.text || '[]';
 
   try {
     const jsonMatch = text.match(/\[[\s\S]*\]/);

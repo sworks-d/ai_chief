@@ -182,5 +182,5 @@ console.log('  03:00 - フェッチャー(24h)');
 console.log('  01:00 - アナリスト(日次)');
 console.log('  月曜06:00 - アナリスト(週次)');
 console.log('  毎月1日03:00 - アナリスト(月次)');
-console.log('\n承認UI: http://localhost:3001');
+console.log('\n承認UI: http://localhost:3005');
 console.log('システム起動中...\n');

@@ -1,7 +1,7 @@
 /**
  * 承認UIサーバー
  * Sが毎朝5〜10分触る唯一の画面のバックエンド
- * アクセス：http://localhost:3001
+ * アクセス：http://localhost:3005
  */
 
 require('dotenv').config();
@@ -13,7 +13,7 @@ const poster = require('./agents/poster');
 const analyst = require('./agents/analyst');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3005;
 
 const DATA_DIR = path.join(__dirname, 'data');
 const PERSONAS_DIR = path.join(DATA_DIR, 'personas');
@@ -24,6 +24,7 @@ const API_STATUS_FILE = path.join(DATA_DIR, 'api_status.json');
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'ui')));
+app.use('/media', express.static(path.join(DATA_DIR, 'media')));
 
 // ユーティリティ：今日の日付
 function getToday() {

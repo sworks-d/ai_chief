@@ -6,11 +6,12 @@
  */
 こちら零細AI推進課長
 require('dotenv').config();
-const Anthropic = require('@anthropic-ai/sdk');
+const { GoogleGenAI } = require('@google/genai');
 const fs = require('fs');
 const path = require('path');
+const { generateCheatSheet } = require('./image_generator');
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const TODAY = new Date().toISOString().split('T')[0];
 const DAY_OF_WEEK = new Date().getDay(); // 0=日, 6=土
@@ -198,19 +199,30 @@ ${item.type_b_hint ? `B型ヒント：${item.type_b_hint.hint}` : ''}
   "layer2": "Sの現場解釈（1行）",
   "layer3": "読者への有益性（1行）",
   "quality_score": 0.0,
-  "quality_notes": "品質に関するメモ"
+  "quality_notes": "品質に関するメモ",
+  "cheat_sheet_data": null // 【重要】型⑤・型⑥・型⑦等で図解があった方が伸びる場合は、以下のJSONを出力。不要ならnull。
+  /*
+  {
+    "title": "図解のメインタイトル（20文字以内）",
+    "subtitle": "図解のサブタイトル・説明",
+    "theme": "grid | step | qa",
+    "items": [
+      { "icon_text": "2〜4文字", "title": "項目名", "before": "Before（任意）", "after": "After（任意）", "desc": "解説" }
+    ] // itemsは6〜9個が目安（qa/stepの場合は少なめでOK）
+  }
+  */
 }`;
 
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 1200,
-    system: [
-      { type: 'text', text: buildSystemContent(), cache_control: { type: 'ephemeral' } }
-    ],
-    messages: [{ role: 'user', content: userPrompt }],
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-pro',
+    contents: userPrompt,
+    config: {
+      systemInstruction: buildSystemContent(),
+      responseMimeType: 'application/json',
+    }
   });
 
-  const text = response.content.find(b => b.type === 'text')?.text || '{}';
+  const text = response.text || '{}';
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
@@ -312,16 +324,16 @@ async function generateThreadPosts(item) {
   "quality_notes": "品質に関するメモ"
 }`;
 
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 2000,
-    system: [
-      { type: 'text', text: buildSystemContent(), cache_control: { type: 'ephemeral' } }
-    ],
-    messages: [{ role: 'user', content: userPrompt }],
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-pro',
+    contents: userPrompt,
+    config: {
+      systemInstruction: buildSystemContent(),
+      responseMimeType: 'application/json',
+    }
   });
 
-  const text = response.content.find(b => b.type === 'text')?.text || '{}';
+  const text = response.text || '{}';
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
@@ -386,16 +398,16 @@ async function generateQuestionPost() {
   "quality_notes": "土曜問いかけ投稿"
 }`;
 
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 600,
-    system: [
-      { type: 'text', text: buildSystemContent(), cache_control: { type: 'ephemeral' } }
-    ],
-    messages: [{ role: 'user', content: userPrompt }],
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-pro',
+    contents: userPrompt,
+    config: {
+      systemInstruction: buildSystemContent(),
+      responseMimeType: 'application/json',
+    }
   });
 
-  const text = response.content.find(b => b.type === 'text')?.text || '{}';
+  const text = response.text || '{}';
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
@@ -416,7 +428,7 @@ async function generateQuestionPost() {
 /**
  * 単一情報からX・Threadsの投稿セットを生成
  */
-async function generatePostSet(item) {
+async function generatePostSet(item, browser) {
   const results = [];
   const format = determineFormat(item);
   console.log(`[Writer]   フォーマット: ${format}`);
@@ -446,8 +458,9 @@ async function generatePostSet(item) {
           id: `${TODAY}-X-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
           platform: 'X',
           source_item: item,
-          status: 'pending',
+          status: threadResult.quality_score >= 8.0 ? 'approved' : 'pending',
           created_at: new Date().toISOString(),
+          ...(threadResult.quality_score >= 8.0 ? { approved_at: new Date().toISOString(), auto_approved: true } : {})
         });
       }
       // フック（index=1）のみsource_urlを付与
@@ -466,8 +479,10 @@ async function generatePostSet(item) {
         results.push({
           ...xPost,
           id: `${TODAY}-X-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-          platform: 'X', source_item: item, status: 'pending',
+          platform: 'X', source_item: item, 
+          status: xPost.quality_score >= 8.0 ? 'approved' : 'pending',
           created_at: new Date().toISOString(),
+          ...(xPost.quality_score >= 8.0 ? { approved_at: new Date().toISOString(), auto_approved: true } : {})
         });
       }
     }
@@ -479,14 +494,27 @@ async function generatePostSet(item) {
         const postObj = {
           ...xPost,
           id: `${TODAY}-X-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-          platform: 'X', source_item: item, status: 'pending',
+          platform: 'X', source_item: item, 
+          status: xPost.quality_score >= 8.0 ? 'approved' : 'pending',
           created_at: new Date().toISOString(),
+          ...(xPost.quality_score >= 8.0 ? { approved_at: new Date().toISOString(), auto_approved: true } : {})
         };
         // source_url付与
         if (hasSourceUrl) {
           postObj.post_text = postObj.post_text + '\n' + item.source_url;
           postObj.source_url = item.source_url;
         }
+
+        // 画像生成処理
+        if (postObj.cheat_sheet_data) {
+          console.log(`[Writer]     チートシート画像生成中... (ID: ${postObj.id})`);
+          const imgPath = path.join(__dirname, '..', 'data', 'media', `${postObj.id}.png`);
+          const success = await generateCheatSheet(postObj.cheat_sheet_data, imgPath, browser);
+          if (success) {
+            postObj.media_path = imgPath;
+          }
+        }
+
         results.push(postObj);
         break;
       }
@@ -506,8 +534,10 @@ async function generatePostSet(item) {
         results.push({
           ...threadsPost,
           id: `${TODAY}-TH-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-          platform: 'Threads', source_item: item, status: 'pending',
+          platform: 'Threads', source_item: item, 
+          status: threadsPost.quality_score >= 8.0 ? 'approved' : 'pending',
           created_at: new Date().toISOString(),
+          ...(threadsPost.quality_score >= 8.0 ? { approved_at: new Date().toISOString(), auto_approved: true } : {})
         });
         break;
       }
@@ -558,17 +588,32 @@ async function main(testMode = false) {
       allPosts.push({
         ...qPost,
         id: `${TODAY}-X-${Date.now()}-question`,
-        platform: 'X', source_item: null, status: 'pending',
+        platform: 'X', source_item: null, 
+        status: qPost.quality_score >= 8.0 ? 'approved' : 'pending',
         created_at: new Date().toISOString(),
+        ...(qPost.quality_score >= 8.0 ? { approved_at: new Date().toISOString(), auto_approved: true } : {})
       });
       console.log('[Writer]   問いかけ投稿生成完了');
     }
   }
 
-  for (const item of targetItems) {
-    console.log(`[Writer] 生成中: ${item.title}`);
-    const posts = await generatePostSet(item);
-    allPosts.push(...posts);
+  console.log('[Writer] 画像生成用ブラウザエンジン起動...');
+  const puppeteer = require('puppeteer');
+  const browser = await puppeteer.launch({
+    defaultViewport: { width: 1080, height: 1080, deviceScaleFactor: 2 },
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    timeout: 60000
+  });
+
+  try {
+    for (const item of targetItems) {
+      console.log(`[Writer] 生成中: ${item.title}`);
+      const posts = await generatePostSet(item, browser);
+      allPosts.push(...posts);
+    }
+  } finally {
+    await browser.close();
+    console.log('[Writer] 画像生成用ブラウザエンジン終了');
   }
 
   // 品質スコア順にソート

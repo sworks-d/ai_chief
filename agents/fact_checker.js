@@ -5,11 +5,11 @@
  */
 
 require('dotenv').config();
-const Anthropic = require('@anthropic-ai/sdk');
+const { GoogleGenAI } = require('@google/genai');
 const fs = require('fs');
 const path = require('path');
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const TODAY = new Date().toISOString().split('T')[0];
 const INPUT_DIR = path.join(__dirname, '..', 'data', 'research');
@@ -96,13 +96,15 @@ JSONのみ返してください：
   "ng_reason": "NGの場合のみ理由を記載、それ以外はnull"
 }`;
 
-  const response = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 500,
-    messages: [{ role: 'user', content: prompt }],
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: prompt,
+    config: {
+      responseMimeType: 'application/json',
+    }
   });
 
-  const text = response.content.find(b => b.type === 'text')?.text || '{}';
+  const text = response.text || '{}';
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) : {};

@@ -14,7 +14,7 @@ npm start
 npm run ui
 ```
 
-起動後 → http://localhost:3001 で承認UIを開く
+起動後 → http://localhost:3005 で承認UIを開く
 
 ---
 
@@ -85,5 +85,5 @@ X_ACCESS_TOKEN=
 X_ACCESS_TOKEN_SECRET=
 THREADS_USER_ID=          # 未設定でもOK（Threads無効化）
 THREADS_ACCESS_TOKEN=     # 未設定でもOK（Threads無効化）
-PORT=3001
+PORT=3005
 ```

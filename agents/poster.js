@@ -35,17 +35,23 @@ function getXClient() {
 /**
  * X（旧Twitter）に投稿
  */
-async function postToX(text, replyToId = null) {
+async function postToX(text, replyToId = null, mediaPath = null) {
   const client = getXClient();
   const rwClient = client.readWrite;
 
   try {
-    const params = replyToId
-      ? { text, reply: { in_reply_to_tweet_id: replyToId } }
-      : text;
-    const response = replyToId
-      ? await rwClient.v2.tweet(params)
-      : await rwClient.v2.tweet(text);
+    const params = { text };
+    if (replyToId) {
+      params.reply = { in_reply_to_tweet_id: replyToId };
+    }
+    
+    if (mediaPath && fs.existsSync(mediaPath)) {
+      console.log(`[Poster] 画像アップロード中: ${mediaPath}`);
+      const mediaId = await rwClient.v1.uploadMedia(mediaPath);
+      params.media = { media_ids: [mediaId] };
+    }
+
+    const response = await rwClient.v2.tweet(params);
     return {
       success: true,
       post_id: response.data.id,
@@ -61,7 +67,10 @@ async function postToX(text, replyToId = null) {
  * Threads APIに投稿
  * Threads Graph API v1.0
  */
-async function postToThreads(text) {
+async function postToThreads(text, mediaPath = null) {
+  if (mediaPath) {
+    console.log('[Poster] ※Threadsは公開URLのメディアのみ対応のため画像添付をスキップしテキストのみ投稿します');
+  }
   const userId = process.env.THREADS_USER_ID;
   const accessToken = process.env.THREADS_ACCESS_TOKEN;
 
@@ -135,6 +144,7 @@ function logPost(post, result) {
     layer: post.source_item?.layer || null,
     character_tag: post.character_tag || null,
     url: result.url || null,
+    media_path: post.media_path || null,
     metrics_1h: null,
     metrics_6h: null,
     metrics_24h: null,
@@ -204,9 +214,9 @@ async function postWithRetry(post, maxRetries = 3) {
 
     let result;
     if (post.platform === 'X') {
-      result = await postToX(post.post_text);
+      result = await postToX(post.post_text, null, post.media_path);
     } else if (post.platform === 'Threads') {
-      result = await postToThreads(post.post_text);
+      result = await postToThreads(post.post_text, post.media_path);
     } else {
       result = { success: false, error: '不明なプラットフォーム' };
     }
@@ -367,7 +377,7 @@ async function postSingle(postId) {
   if (post.platform !== 'X') return { success: false, error: 'Threads即時投稿は未対応' };
 
   console.log(`[Poster] 即時投稿: ${post.post_text.slice(0, 40)}...`);
-  const result = await postToX(post.post_text);
+  const result = await postToX(post.post_text, null, post.media_path);
 
   if (result.success) {
     updateQueueStatus(postId, 'posted', result);
